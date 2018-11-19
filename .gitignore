@@ -3,3 +3,5 @@ target
 .attach_pid*
 .settings
 test/stats
+test/*.txt
+test/*.csv
