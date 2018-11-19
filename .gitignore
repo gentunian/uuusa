@@ -1,1 +1,5 @@
 target
+*.class
+.attach_pid*
+.settings
+test/stats
