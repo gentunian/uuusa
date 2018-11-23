@@ -10,8 +10,8 @@ import org.grupolys.samulan.analyser.operation.Operation;
 public class SentimentDependencyNode extends DependencyNode {
 
 	private SentimentInformation si = null;
+	private float wordWeight;
 
-	
 	public SentimentDependencyNode() {
 		super();
 		// TODO Auto-generated constructor stub
@@ -63,4 +63,15 @@ public class SentimentDependencyNode extends DependencyNode {
 		return this.getWord()+" "+"["+this.getAddress()+","+this.getCpostag()+","+this.getDeprel()+"] ("+so+") "+"A("+this.getAddress()+")=["+explanation+"]";
 	}
 	
+	public void setWordWeight(float value) {
+		this.wordWeight = value;
+	}
+
+	/**
+	 * @return the wordWeight
+	 */
+	public float getWordWeight() {
+		return wordWeight;
+	}
+		
 }

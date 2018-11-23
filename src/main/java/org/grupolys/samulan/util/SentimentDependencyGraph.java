@@ -3,6 +3,7 @@ package org.grupolys.samulan.util;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
@@ -203,18 +204,57 @@ public class SentimentDependencyGraph extends DependencyGraph {
 		
 	}
 	
-
-
-
 	@Override
-	public String toString(){
-		
-		String rawGraph ="";
-		for (Short id: this.nodes.keySet()){
-			float so =  ((SentimentDependencyNode) this.nodes.get(id)).getSi() != null ? ((SentimentDependencyNode) this.nodes.get(id)).getSi().getSemanticOrientation() : 0;  
-			rawGraph+= String.valueOf(id)+":("+ this.nodes.get(id)+"["+((SentimentDependencyNode) this.nodes.get(id)).getSi()+"]"+")\n";
+	public String toString() {
+
+		String rawGraph = "";
+		for (Short id : this.nodes.keySet()) {
+			float so = ((SentimentDependencyNode) this.nodes.get(id)).getSi() != null
+					? ((SentimentDependencyNode) this.nodes.get(id)).getSi().getSemanticOrientation()
+					: 0;
+			rawGraph += String.valueOf(id) + ":(" + this.nodes.get(id) + "["
+					+ ((SentimentDependencyNode) this.nodes.get(id)).getSi() + "]" + ")\n";
 		}
 		return rawGraph;
+	}
+
+	public Map<String, Object> toMap(int address) {
+
+		SentimentDependencyNode sdn = this.getNode((short) address);
+
+		List<Map<String, Object>> childrenArray = new ArrayList<Map<String, Object>>();
+		// JSONArray outerArray = new JSONArray();
+		Map<String, Object> map = new HashMap<String, Object>();
+
+		SentimentInformation si = sdn.getSi();
+		String operationExplained = "";
+		float so = 0;
+		if (si != null) {
+			so = si.getSemanticOrientation();
+			operationExplained = si.getOperationExplanation();
+		}
+		// float so = sdn.getSi() == null ? 0 : sdn.getSi().getSemanticOrientation();
+		sdn.getSi().getOperationExplanation();
+		map.put(ADDRESS, address);
+		map.put(POSTAG, sdn.getPostag());
+		map.put(SEMANTIC_ORIENTATION, so);
+		map.put(DEPENDENCY_TYPE, sdn.getDeprel());
+		map.put(IS_NEGATION, sdn.getSi() == null ? false : sdn.getSi().getType().equals(Operation.SHIFT));
+		map.put(IS_INTENSIFIER, sdn.getSi() == null ? false : sdn.getSi().getType().equals(Operation.WEIGHT));
+		map.put(WORD, sdn.getWord());
+		map.put(CHILDREN, false);
+		map.put("operationExplained", operationExplained);
+		map.put("weight", sdn.getWordWeight());
+		if (sdn.isLeaf()) {
+			return map;
+		} else {
+			for (Short child : sdn.getDependents()) {
+				childrenArray.add(this.toMap(child));
+			}
+		
+			map.put(CHILDREN, childrenArray);
+			return map;
+		}
 	}
 
 }

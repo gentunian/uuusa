@@ -64,8 +64,9 @@ public class SyntacticRuleBasedAnalyser extends RuleBasedAnalyser implements Ana
 		}
 		int isDefault =  operation.isSemanticOrientationOperation() ? 1 : 0;
 		value = dictionaryValue*(1+(float) 0.0*(form.toUpperCase().equals(form) ? 1: 0))*isDefault;
-		
-		return (weightSemanticOrientation(value));
+		value = weightSemanticOrientation(value);
+		node.setWordWeight(value);
+		return value;
 	}
 	
 	
