@@ -46,7 +46,7 @@ public class ProfileController {
     }
 
     @PutMapping("/profiles/{name}/{pos}/{word}/{weight}")
-    public ResponseEntity<Profile> putProfilePos(@PathVariable String name, @PathVariable String pos,
+    public ResponseEntity<String> putProfilePos(@PathVariable String name, @PathVariable String pos,
             @PathVariable String word, @PathVariable Float weight) {
         HttpStatus httpStatus = HttpStatus.OK;
         FilesystemProfileCreator fpc = new FilesystemProfileCreator();
@@ -60,8 +60,9 @@ public class ProfileController {
 
         profile.addEmotion(pos, word.toLowerCase(), weight);
         fpc.saveProfile(name, profile);
-
-        return new ResponseEntity<Profile>(profile, httpStatus);
+        Utils.updateRules(name);
+        String response = "OK";
+        return new ResponseEntity<String>(response, httpStatus);
     }
 
     @PostMapping("/profiles/{name}/{pos}")
