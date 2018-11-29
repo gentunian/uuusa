@@ -157,4 +157,17 @@ public class Profile implements Serializable {
             this.boosters.remove(word);
         }
     }
+
+    public void addEmoticon(String emoticon, Float value) {
+        if (this.emoticons == null) {
+            this.emoticons = new HashMap<String, Float>();
+        }
+        this.emoticons.put(emoticon, value);
+    }
+
+	public void removeEmoticon(String word) {
+        if (this.emoticons != null) {
+            this.emoticons.remove(word);
+        }
+	}
 }
