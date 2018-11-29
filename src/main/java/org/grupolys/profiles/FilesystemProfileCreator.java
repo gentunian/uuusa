@@ -55,10 +55,14 @@ public class FilesystemProfileCreator implements ProfileCreator {
             for (String key : emotions.keySet()) {
                 String partOfSpeech = getPartOfSpeech(key);
                 if (partOfSpeech != null) {
-                    saveEmotionsWeight(partOfSpeech, profileDirectory, emotions.get(key));
+                    String filename = profileDirectory + File.separator + partOfSpeech + Dictionary.POSTAG_SEPARATOR
+                            + Dictionary.EMOTION_LIST;
+                    saveMapOfWeights(filename, emotions.get(key));
                 }
             }
-
+            saveMapOfWeights(profileDirectory + File.separator + Dictionary.BOOSTER_LIST, profile.getBoosters());
+            saveMapOfWeights(profileDirectory + File.separator + Dictionary.EMOTICON_LIST, profile.getEmoticons());
+            saveListOfWords(profileDirectory + File.separator + Dictionary.NEGATING_LIST, profile.getNegating());
         } catch (MyException e) {
             // nothing to save
             e.printStackTrace();
@@ -70,16 +74,30 @@ public class FilesystemProfileCreator implements ProfileCreator {
         return false;
     }
 
-    private void saveEmotionsWeight(String partOfSpeech, String profileDirectory, Map<String, Float> weights)
-            throws MyException {
-        // The filename for adverbs emotions
-        String emotionLookupFile = profileDirectory + File.separator + partOfSpeech + Dictionary.POSTAG_SEPARATOR
-                + Dictionary.EMOTION_LIST;
+    private void saveListOfWords(String filename, List<String> words) throws MyException {
         // We are going to use PrintWriter to write text into the file
         PrintWriter printWriter = null;
 
         try {
-            printWriter = new PrintWriter(emotionLookupFile, StandardCharsets.UTF_8.name());
+            printWriter = new PrintWriter(filename, StandardCharsets.UTF_8.name());
+            for (String word : words) {
+                printWriter.printf("%s\n", word);
+            }
+        } catch (FileNotFoundException | UnsupportedEncodingException e) {
+            throw new MyException(e);
+        } finally {
+            if (printWriter != null) {
+                printWriter.close();
+            }
+        }
+    }
+
+    private void saveMapOfWeights(String filename, Map<String, Float> weights) throws MyException {
+        // We are going to use PrintWriter to write text into the file
+        PrintWriter printWriter = null;
+
+        try {
+            printWriter = new PrintWriter(filename, StandardCharsets.UTF_8.name());
             for (String word : weights.keySet()) {
                 Float weight = weights.get(word);
                 printWriter.printf("%s\t%s\n", word, weight);
@@ -118,7 +136,7 @@ public class FilesystemProfileCreator implements ProfileCreator {
                 Files.createSymbolicLink(linkPath, targetPath);
             }
         } catch (FileAlreadyExistsException e) {
-            System.out.println("Symbolic link for parser " +  defaultParserDir + "already exists: ");
+            System.out.println("Symbolic link for parser " + defaultParserDir + "already exists: ");
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -134,7 +152,7 @@ public class FilesystemProfileCreator implements ProfileCreator {
 
         try {
             Files.createSymbolicLink(Paths.get(link), Paths.get(target));
-        } catch(FileAlreadyExistsException e) {
+        } catch (FileAlreadyExistsException e) {
             System.out.println("Symbolic link for tagger " + target + "already exists: " + link);
         } catch (IOException e) {
             e.printStackTrace();
@@ -190,7 +208,7 @@ public class FilesystemProfileCreator implements ProfileCreator {
         try (Stream<String> stream = Files.lines(Paths.get(file))) {
             map = stream.filter(Utils::notEmpty).map(Utils::split)
                     .collect(Collectors.toMap(Utils::getWord, Utils::getWeight, Utils::noDuplicates));
-        } catch(NoSuchFileException e ) {
+        } catch (NoSuchFileException e) {
             System.out.println("Warning: loading profile weights file. No such file: " + file);
         } catch (IOException e) {
             e.printStackTrace();
