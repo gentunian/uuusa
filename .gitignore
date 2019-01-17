@@ -1,3 +1,5 @@
+test
+parser.log
 target
 *.class
 .attach_pid*
