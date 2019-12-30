@@ -23,21 +23,14 @@ import com.mongodb.client.model.Indexes;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.grupolys.profiles.Profile;
 import org.grupolys.profiles.exception.ProfileNotFoundException;
-import org.grupolys.samulan.analyser.AnalyserConfiguration;
 import org.grupolys.samulan.analyser.RuleBasedAnalyser;
-import org.grupolys.samulan.analyser.SyntacticRuleBasedAnalyser;
 import org.grupolys.samulan.processor.Processor;
-import org.grupolys.samulan.processor.parser.MaltParserWrapper;
-import org.grupolys.samulan.processor.tagger.MaxentStanfordTagger;
-import org.grupolys.samulan.processor.tokenizer.ARKTwokenizer;
-import org.grupolys.samulan.rule.RuleManager;
-import org.grupolys.samulan.util.Dictionary;
 import org.grupolys.samulan.util.SentimentDependencyGraph;
 import org.grupolys.samulan.util.SentimentInformation;
 import org.grupolys.spring.controllers.exception.NoTextToProcessException;
-import org.grupolys.spring.dao.utils.Utils;
+import org.grupolys.spring.service.SamulanProcessorService;
+import org.grupolys.spring.service.SamulanRulesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -58,6 +51,12 @@ public class AnalizeController {
     @Autowired
     private MongoClient mongoClient;
 
+    @Autowired
+    private SamulanProcessorService processorService;
+    @Autowired
+    private SamulanRulesService rulesService;
+
+    
     private ObjectId saveMap(Map<String, Object> map, String collectionName, String db) {
         Document document = new Document(map);
 
@@ -172,11 +171,11 @@ public class AnalizeController {
                         analysisId = doc.get("_id").toString();
                         obj.put("_cached", true);
                     } else {
-                        RuleBasedAnalyser rba = Utils.getRules().get(profileName);
+                        RuleBasedAnalyser rba = rulesService.getRules().get(profileName);
                         if (rba == null) {
                             throw new ProfileNotFoundException("Rules for profile " + profileName + " not found");
                         }
-                        Processor processor = Utils.getProcessorInstance();
+                        Processor processor = processorService.getProcessor();
                         doc = analyse(text, processor, rba);
                         analysisId = this.saveMap(doc, "sentiment", profileName).toString();
                     }
@@ -194,9 +193,9 @@ public class AnalizeController {
         } catch (MalformedParametersException e) {
             e.printStackTrace();
             httpStatus = HttpStatus.BAD_REQUEST;
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+        // } catch (FileNotFoundException e) {
+        //     e.printStackTrace();
+        //     httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
         } catch (NoTextToProcessException e) {
             System.out.println(e.getMessage());
             httpStatus = HttpStatus.UNPROCESSABLE_ENTITY;
