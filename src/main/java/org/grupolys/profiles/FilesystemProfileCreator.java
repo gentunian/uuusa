@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.Arrays;
 
 import org.grupolys.profiles.exception.ProfileNotFoundException;
 import org.grupolys.samulan.util.Dictionary;
@@ -228,6 +229,17 @@ public class FilesystemProfileCreator implements ProfileCreator {
         }
 
         return words;
+    }
+
+    @Override
+    public String[] profiles() {
+        String profileDirectory = PROFILES_DIR + File.separator ;
+
+        return  Arrays
+            .stream(new File(profileDirectory).listFiles(File::isDirectory))
+            .map(File::getName)
+            .toArray(String[]::new);
+
     }
 
 }

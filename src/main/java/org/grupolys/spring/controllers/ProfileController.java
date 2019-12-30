@@ -8,15 +8,15 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
+import org.grupolys.hazelcast.HazelcastCache;
 import org.grupolys.profiles.FilesystemProfileCreator;
 import org.grupolys.profiles.PartOfSpeech;
 import org.grupolys.profiles.Profile;
 import org.grupolys.profiles.exception.ProfileNotFoundException;
 import org.grupolys.spring.controllers.exception.InvalidPosException;
-import org.grupolys.spring.dao.utils.Utils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MissingPathVariableException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -28,6 +28,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class ProfileController {
+
+    @Autowired
+    private HazelcastCache cache;
+
+    @GetMapping("/profiles")
+    public ResponseEntity<String[]> getProfiles() {
+        HttpStatus httpStatus = HttpStatus.OK;
+        FilesystemProfileCreator fpc = new FilesystemProfileCreator();
+        String[] profiles = fpc.profiles();
+
+        return new ResponseEntity<String[]>(profiles, httpStatus);
+    }
 
     @PutMapping("/profiles/{name}")
     public ResponseEntity<Profile> putProfile(@PathVariable String name, @RequestBody @Valid Profile newProfile) {
@@ -127,7 +139,7 @@ public class ProfileController {
         }
 
         fpc.saveProfile(name, profile);
-        Utils.updateRules(name);
+        cache.updateRules(name);
         
         return new ResponseEntity<String>(response, httpStatus);
     }
@@ -164,7 +176,7 @@ public class ProfileController {
             response = "{\"error\": \"Invalid postag: " + pos + "\"}";
         }
         fpc.saveProfile(name, profile);
-        Utils.updateRules(name);
+        cache.updateRules(name);
         return new ResponseEntity<String>(response, httpStatus);
     }
 
