@@ -470,6 +470,7 @@ public class Dictionary {
 		 * @return The semantic orientation of the lemma or zero if the word has no
 		 *         subjectivity.
 		 */
+
 		Float value = null;
 		String lowerCaseLemma = lemma.toLowerCase();
 		Map<String, Float> values = classValues.get(classWord);
@@ -492,6 +493,8 @@ public class Dictionary {
 		
 		if (value == null)
 			return 0;
+		
+		System.out.println("Dictionary.getValue: classWord: "+ classWord +" lemma: "+lemma + " value: "+value);
 		return value;
 	}
 	
