@@ -1,24 +1,6 @@
 package org.grupolys.samulan.rule;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import org.grupolys.samulan.analyser.operation.BranchStrategy;
-import org.grupolys.samulan.analyser.operation.DefaultOperation;
-import org.grupolys.samulan.analyser.operation.FirstSubjectiveChildrenStrategy;
-import org.grupolys.samulan.analyser.operation.HeadStrategy;
-import org.grupolys.samulan.analyser.operation.NChildrenStrategy;
-import org.grupolys.samulan.analyser.operation.Operation;
-import org.grupolys.samulan.analyser.operation.ScopeStrategy;
-import org.grupolys.samulan.analyser.operation.ShiftOperation;
-import org.grupolys.samulan.analyser.operation.WeightingOperation;
+import org.grupolys.samulan.analyser.operation.*;
 import org.grupolys.samulan.util.dictionary.Dictionary;
 import org.grupolys.samulan.util.SentimentDependencyGraph;
 import org.grupolys.samulan.util.SentimentDependencyNode;
@@ -29,14 +11,20 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.File;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * It manages the rules of the system, reading the configuration.xml and identifies
  * the rules that match with a node of a @see es.udc.fi.dc.lys.nlputils.parser.DependencyGraph
  *
  * @author David Vilares
  */
-@Deprecated
-public class RuleManager implements RulesManager {
+public class XmlRulesManager implements RulesManager {
 
     //XML fields
     public static final String OPERATION_FIELD = "operation";
@@ -64,36 +52,16 @@ public class RuleManager implements RulesManager {
 
 
     private List<Rule> rules;
-    private Dictionary d;
+    private Dictionary dictionary;
     private boolean alwaysShift = true;
     private Pattern alphaNumericPattern = Pattern.compile("^[\\-'a-zA-Z0-9]");
     private Pattern nonAlphaNumericPattern = Pattern.compile("[^.+]");
 
-    public RuleManager(Dictionary d) {
-        super();
-        this.rules = new ArrayList<Rule>();
-        this.d = d;
-        //Adding default Rule
-        Operation defaultOperation = this.getOperation(Operation.DEFAULT);
-        Rule defaultRule = new Rule(
-        		new HashSet<>(),
-				new HashSet<>(),
-				new HashSet<>(),
-				new HashSet<>(),
-				(short) 0,
-                new HashSet<>(),
-				defaultOperation);
-        this.rules.add(defaultRule);
-    }
-
-    @Override
-    public Dictionary getDictionary() {
-        return getD();
-    }
-
-    @Override
-    public void setDictionary(Dictionary dictionary) {
-        setD(dictionary);
+    public XmlRulesManager(Dictionary dictionary, String rulesPath) {
+        this.rules = new ArrayList<>();
+        this.dictionary = dictionary;
+        this.rules.add(new Rule());
+        this.readRules(rulesPath);
     }
 
     public List<Rule> getRules() {
@@ -104,18 +72,17 @@ public class RuleManager implements RulesManager {
         this.rules = rules;
     }
 
-
     public void addRule(Rule r) {
         this.rules.add(0, r);
     }
 
 
-    public Dictionary getD() {
-        return d;
+    public Dictionary getDictionary() {
+        return dictionary;
     }
 
-    public void setD(Dictionary d) {
-        this.d = d;
+    public void setDictionary(Dictionary dictionary) {
+        this.dictionary = dictionary;
     }
 
 
@@ -127,55 +94,52 @@ public class RuleManager implements RulesManager {
         this.alwaysShift = alwaysShift;
     }
 
-    /***
-     *
-     * @param dg
-     * @param address
-     * @return
-     */
     public List<Operation> getOperations(SentimentDependencyGraph dg, short address) {
-
         SentimentDependencyNode currentNode = dg.getNode(address);
-        List<Operation> operations = new ArrayList<Operation>();
+        List<Operation> operations = new ArrayList<>();
+
         for (Rule r : rules) {
             if (r.match(dg, currentNode)) {
                 Operation o = r.getOperation();
-                //System.out.println("currentNode: "+currentNode+" r: "+r+" o: "+o);
-                if (dg.getNode(address).getSi() == null) {
-					dg.getNode(address).setSi(new SentimentInformation());
+
+                if (currentNode.getSi() == null) {
+                    // TODO: try to avoid side-effects in a method named getOperation()
+					currentNode.setSi(new SentimentInformation());
 				}
+
                 if (!o.getOperationName().equals(Operation.DEFAULT)) {
-                    dg.getNode(address).getSi().setType(o.getOperationName());
+                    // TODO: try to avoid side-effects in a method named getOperation()
+                    currentNode.getSi().setType(o.getOperationName());
 
                     if (o.getStrategy() instanceof NChildrenStrategy) {
+                        // TODO: try to avoid side-effects in a method named getOperation()
                         ((NChildrenStrategy) o.getStrategy()).setReference(address);
                     }
 
                     if (o.getStrategy() instanceof FirstSubjectiveChildrenStrategy) {
+                        // TODO: try to avoid side-effects in a method named getOperation()
                         ((FirstSubjectiveChildrenStrategy) o.getStrategy()).setReference(address);
                     }
                 }
 
                 operations.add(r.getOperation());
             }
-
         }
+
         if (operations.contains(getOperation(Operation.DEFAULT)) && operations.size() > 1) {
 			operations.remove(getOperation(Operation.DEFAULT));
 		}
+
         return operations;
     }
 
-
     private String getXMLNodeValue(Element element, String XMLTag) {
-
         NodeList fstNmElmntLst = element.getElementsByTagName(XMLTag);
         Element fstNmElmnt = (Element) fstNmElmntLst.item(0);
         NodeList fstNm = fstNmElmnt.getChildNodes();
-        String value = ((Node) fstNm.item(0)).getNodeValue();
+        String value = fstNm.item(0).getNodeValue();
         return value;
     }
-
 
     private Operation getOperation(String operation) {
         //null because rule can't be established in this point
@@ -204,7 +168,6 @@ public class RuleManager implements RulesManager {
      * @return ... or NULL if operation was not parsed.
      */
     private Operation getOperationFinal(String operation, String form) {
-
         Operation o = null;
 
         if (operation.startsWith(Operation.SHIFT)) {
@@ -214,48 +177,41 @@ public class RuleManager implements RulesManager {
         if (operation.startsWith(Operation.WEIGHT)) {
             o = this.parseWeightOperation(operation, form);
         }
+
         return o;
     }
 
-
     private ScopeStrategy getScopeStrategy(String scope, String[] parameters) {
-
-
         if (scope.startsWith(N_RIGHT_CHILDREN)) {
             return new NChildrenStrategy(Integer.parseInt(scope.replace(N_RIGHT_CHILDREN, "")), true);
         }
+
         if (scope.startsWith(N_LEFT_CHILDREN)) {
             return new NChildrenStrategy(Integer.parseInt(scope.replace(N_LEFT_CHILDREN, "")), false);
         }
-        switch (scope) {
-            case HEAD: {
-                return new HeadStrategy();
-            }
-            //		case BROTHERS: {return new ChildrenStrategy();}
-            case CHILDREN: {
-                return new HeadStrategy(true);
-            }
-            //		case SUBTREE_FROM_HEAD: {return new SubTreeFromHeadStrategy();}
-            //		case FIRST_RIGHT_BROTHER: {return new NRightBrothersStrategy(1);}
-            case FIRST_SUBJECTIVE_RIGHT_BRANCH: {
-                return new FirstSubjectiveChildrenStrategy(true);
-            }
-            case FIRST_SUBJECTIVE_LEFT_BRANCH: {
-                return new FirstSubjectiveChildrenStrategy(false);
-            }
-            default: {
-                return new BranchStrategy(scope);
-            }
+
+        if (scope.equals(HEAD)) {
+            return new HeadStrategy();
         }
+
+        if (scope.equals(CHILDREN)) {
+            return new HeadStrategy(true);
+        }
+
+        if (scope.equals(FIRST_SUBJECTIVE_LEFT_BRANCH)) {
+            return new FirstSubjectiveChildrenStrategy(false);
+        }
+
+        if (scope.equals(FIRST_SUBJECTIVE_RIGHT_BRANCH)) {
+            return new FirstSubjectiveChildrenStrategy(true);
+        }
+
+        return new BranchStrategy(scope);
     }
 
     private Operation parseShiftOperation(String operation, String form) {
-
         ShiftOperation successor = null;
-        ScopeStrategy strategy = null;
-        float shiftValue;
-
-
+        ScopeStrategy strategy;
         Pattern p = Pattern.compile("(\\(.*\\))");
         Matcher m = p.matcher(operation);
         m.find();
@@ -264,45 +220,49 @@ public class RuleManager implements RulesManager {
 				.replace(")", "")
 				.split(",");
 
+        float shiftValue;
         if (parameters[0].equals(SENTIDATA)) {
-            shiftValue = this.d.getValue(Operation.SHIFT, form, true);
+            shiftValue = dictionary.getValue(Operation.SHIFT, form, true);
         } else {
         	shiftValue = Float.parseFloat(parameters[0]);
 		}
+
         for (int i = parameters.length - 1; i >= 0; i--) {
             strategy = getScopeStrategy(parameters[i], parameters);
             successor = new ShiftOperation(null, strategy, successor, shiftValue);
             successor.setAlwaysShift(isAlwaysShift());
         }
+
         return successor;
     }
 
 
     private Operation parseWeightOperation(String operation, String form) {
-
-        WeightingOperation sucessor = null;
-
+        WeightingOperation successor = null;
         ScopeStrategy strategy;
-        float weightingValue = 0;
         Pattern p = Pattern.compile("(\\(.*\\))");
         Matcher m = p.matcher(operation);
         m.find();
-        String[] parameters = m.group(1).replace("(", "").replace(")", "").split(",");
+        String[] parameters = m.group(1)
+                .replace("(", "")
+                .replace(")", "")
+                .split(",");
 
+        float weightingValue;
         if (parameters[0].equals(SENTIDATA)) {
-            //System.out.println("form: "+form);
-            weightingValue = this.d.getValue(Operation.WEIGHT, form, true);
-        } else
+            weightingValue = dictionary.getValue(Operation.WEIGHT, form, true);
+        } else {
             weightingValue = Float.parseFloat(parameters[0]);
+        }
 
         for (int i = parameters.length - 1; i >= 1; i--) {
             strategy = getScopeStrategy(parameters[i], parameters);
-            sucessor = new WeightingOperation(null, strategy, weightingValue, sucessor);
+            successor = new WeightingOperation(null, strategy, weightingValue, successor);
         }
-        return sucessor;
+
+        return successor;
 
     }
-
 
     private boolean isNonRegexForm(String form) {
         return alphaNumericPattern.matcher(form).matches();
@@ -313,25 +273,30 @@ public class RuleManager implements RulesManager {
     }
 
 
-    private void addRules(Element fstElement, Set<String> sentiForms, Set<String> postags, Set<String> dependencies,
-                          short levelsup, short priority, Set<String> validHead) {
+    private void addRules(Element fstElement,
+                          Set<String> sentiForms,
+                          Set<String> postags,
+                          Set<String> dependencies,
+                          short levelsup,
+                          short priority,
+                          Set<String> validHead) {
 
         for (String sentiForm : sentiForms) {
-            Operation o = getOperationFinal(this.getXMLNodeValue(fstElement, TYPE), sentiForm);
+            Operation o = getOperationFinal(getXMLNodeValue(fstElement, TYPE), sentiForm);
+
             if (o != null) {
-                Set<String> patternForms = new HashSet<String>();
-                Set<Pattern> patterns = new HashSet<Pattern>();
+                Set<String> patternForms = new HashSet<>();
+                Set<Pattern> patterns = new HashSet<>();
 
                 if (isNonRegexForm(sentiForm)) {
-                    patterns = new HashSet<Pattern>(Arrays.asList(Pattern.compile(sentiForm)));
+                    patterns = new HashSet<>(Collections.singletonList(Pattern.compile(sentiForm)));
                 } else {
-                    patternForms = new HashSet<String>(Arrays.asList(sentiForm));
+                    patternForms = new HashSet<>(Collections.singletonList(sentiForm));
                 }
                 Rule r = new Rule(patterns, patternForms, postags, dependencies, levelsup, priority, validHead, o);
-                this.addRule(r);
+                addRule(r);
             }
         }
-
     }
 
     public void readRules(String pathXML) {
@@ -367,8 +332,8 @@ public class RuleManager implements RulesManager {
                     if (forms.contains(SENTIDATA_BOOSTER)) {
                         if (forms.size() == 1) {
                             //System.out.println("getClassValues: "+this.d.getClassValues());
-                            if (this.d.getClassValues().get(Operation.WEIGHT) != null) {
-                                addRules(fstElement, this.d.getClassValues().get(Operation.WEIGHT).keySet(),
+                            if (this.dictionary.getClassValues().get(Operation.WEIGHT) != null) {
+                                addRules(fstElement, this.dictionary.getClassValues().get(Operation.WEIGHT).keySet(),
                                         postags, dependencies, levelsup, priority,
                                         validHead);
                             }
@@ -380,7 +345,7 @@ public class RuleManager implements RulesManager {
                     //NEGATION RULES WITH SENTIDATA
                     else if (forms.contains(SENTIDATA_NEGATION)) {
                         if (forms.size() == 1) {
-                            addRules(fstElement, this.d.getNegatingWords(),
+                            addRules(fstElement, this.dictionary.getNegatingWords(),
                                     postags, dependencies, levelsup, priority,
                                     validHead);
 
@@ -393,7 +358,7 @@ public class RuleManager implements RulesManager {
                     else {
                         forms.remove("*"); //TODO process regex
                         if (forms.contains(SENTIDATA_ADVERSATIVE)) {
-                            forms.addAll(this.d.getAdversativeWords());
+                            forms.addAll(this.dictionary.getAdversativeWords());
                         }
                         //System.out.println(forms+" "+priority);
                         addRules(fstElement, forms,

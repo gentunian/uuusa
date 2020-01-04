@@ -7,33 +7,29 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.TreeMap;
 
 import org.grupolys.samulan.analyser.operation.Operation;
-import org.grupolys.samulan.util.exceptions.OperationNotFoundException;
 
-
+@Deprecated
 public class Dictionary {
 	
 	public static final String EMOTION_LIST = "EmotionLookupTable.txt";
 	public static final String BOOSTER_LIST =	"BoosterWordList.txt";
 	public static final String LEMMAS_LIST = "LemmasList.txt";
 	public static final String EMOTICON_LIST = "EmoticonLookupTable.txt";
-	public static final String WORD_LIST = "EnglishWordList.txt";
-	public static final String IDIOM_LIST = "IdiomLookupTable.txt";
-	public static final String IRONY_LIST = "IronyTerms.txt";
+//	public static final String WORD_LIST = "EnglishWordList.txt";
+//	public static final String IDIOM_LIST = "IdiomLookupTable.txt";
+//	public static final String IRONY_LIST = "IronyTerms.txt";
 	public static final String NEGATING_LIST = "NegatingWordList.txt";
-	public static final String QUESTION_LIST = "QuestionWords.txt";
-	public static final String SLANG_LIST = "SlangLookupTable.txt";
+//	public static final String QUESTION_LIST = "QuestionWords.txt";
+//	public static final String SLANG_LIST = "SlangLookupTable.txt";
 	public static final String ADVERSATIVE_LIST ="AdversativeList.txt";
 	public static final String LEMMAS_STRIPPERS = "WordToLemmasStrippingList.txt";
 	public static final String POSTAG_SEPARATOR = "_";
@@ -57,28 +53,25 @@ public class Dictionary {
 	
 	public Dictionary(){
 		/*Empty dictionary*/
-		this.values = new HashMap<String,Float>();
+		this.values = new HashMap<>();
 //		this.stemValues = new TreeMap<String,Float>();
-		this.stemValues = new TreeMap<String,Float>(new Comparator<String>(){
-	        @Override
-	        public int compare(String s1, String s2) {
-	            if (s1.length() > s2.length()) {
-	                return -1;
-	            } else if (s1.length() < s2.length()) {
-	                return 1;
-	            } else {
-	                return s1.compareTo(s2);
-	            }
-	        }
+		this.stemValues = new TreeMap<>((s1, s2) -> {
+			if (s1.length() > s2.length()) {
+				return -1;
+			} else if (s1.length() < s2.length()) {
+				return 1;
+			} else {
+				return s1.compareTo(s2);
+			}
 		});
-		this.classValues = new HashMap<String,Map<String,Float>>();
-		this.lemmas = new HashMap<String,String>();
-		this.classLemmas = new HashMap<String,Map<String,String>>();
-		this.emoticons = new HashMap<String,Float>();
-		this.negatingWords = new HashSet<String>();
-		this.adversativeWords = new HashSet<String>();
-		this.adverbsIntensifiers = new HashSet<String>();
-		this.lemmasStrippers = new HashMap<String,ArrayList<String>>();
+		this.classValues = new HashMap<>();
+		this.lemmas = new HashMap<>();
+		this.classLemmas = new HashMap<>();
+		this.emoticons = new HashMap<>();
+		this.negatingWords = new HashSet<>();
+		this.adversativeWords = new HashSet<>();
+		this.adverbsIntensifiers = new HashSet<>();
+		this.lemmasStrippers = new HashMap<>();
 		this.thereIsClassEmotionDict = false;
 	}
 	
@@ -86,42 +79,36 @@ public class Dictionary {
 	public Dictionary(Map<String, Float> values, Map<String,String> lemmas){
 		this.values = values;
 		this.lemmas = lemmas;
-		this.stemValues = new TreeMap<String,Float>(new Comparator<String>(){
-			@Override
-			public int compare(String o1, String o2){
-				return o2.length() - o1.length();
-			}
-		});
-		this.classValues = new HashMap<String,Map<String,Float>>();
-		this.classLemmas = new HashMap<String,Map<String,String>>();
-		this.emoticons = new HashMap<String, Float>();
-		this.negatingWords = new HashSet<String>();
-		this.adversativeWords = new HashSet<String>();
-		this.adverbsIntensifiers = new HashSet<String>();
-		this.lemmasStrippers = new HashMap<String,ArrayList<String>>();
+		this.stemValues = new TreeMap<>((o1, o2) -> o2.length() - o1.length());
+		this.classValues = new HashMap<>();
+		this.classLemmas = new HashMap<>();
+		this.emoticons = new HashMap<>();
+		this.negatingWords = new HashSet<>();
+		this.adversativeWords = new HashSet<>();
+		this.adverbsIntensifiers = new HashSet<>();
+		this.lemmasStrippers = new HashMap<>();
 		this.thereIsClassEmotionDict = false;
 	}
 	
-	public Dictionary(Map<String, Float> values, Map<String, String> lemmas,
-			Map<String, Map<String, Float>> classValues, Map<String, Map<String, String>> classLemmas,
-			Map<String, Float> emoticons, Set<String> negatingWords, Set<String> adversativeWords) {
+	public Dictionary(Map<String, Float> values,
+					  Map<String, String> lemmas,
+					  Map<String, Map<String, Float>> classValues,
+					  Map<String, Map<String, String>> classLemmas,
+					  Map<String, Float> emoticons,
+					  Set<String> negatingWords,
+					  Set<String> adversativeWords) {
 		// TODO pass stemValues as parameter
 		this.values = values;
 		this.lemmas = lemmas;
-		this.stemValues = new TreeMap<String, Float>(new Comparator<String>() {
-			@Override
-			public int compare(String o1, String o2) {
-				return o2.length() - o1.length();
-			}
-		});
+		this.stemValues = new TreeMap<>((o1, o2) -> o2.length() - o1.length());
 		this.classValues = classValues;
 		this.classLemmas = classLemmas;
 		this.emoticons = emoticons;
 		this.negatingWords = negatingWords;
 		this.adversativeWords = adversativeWords;
-		this.adverbsIntensifiers = new HashSet<String>();
-		this.lemmasStrippers = new HashMap<String, ArrayList<String>>();
-		this.thereIsClassEmotionDict = this.getClassValues().isEmpty() ? false : true;
+		this.adverbsIntensifiers = new HashSet<>();
+		this.lemmasStrippers = new HashMap<>();
+		this.thereIsClassEmotionDict = !getClassValues().isEmpty();
 	}
 	
 	public Map<String, Float> getValues() {
@@ -180,126 +167,110 @@ public class Dictionary {
 		this.adverbsIntensifiers = adverbsIntensifiers;
 	}
 
+	/**
+	 * @return The semantic orientation of the lemma or zero if the word has no
+	 *         subjectivity.
+	 */
 	private float getValue(String lemma) {
-		/**
-		 * @return The semantic orientation of the lemma or zero if the word has no
-		 *         subjectivity.
-		 */
 		Float value = values.get(lemma);
 		if (value == null) {
 			// TODO this is not efficient
-			for (String stem : this.stemValues.keySet()) {
-				// System.out.println("lemma: "+lemma+" stem: "+stem+"
-				// "+lemma.startsWith(stem));
+			for (String stem : stemValues.keySet()) {
 				if (lemma.startsWith(stem)) {
-					// System.out.println("Entra lemma: "+lemma+" stem: "+stem);
-					return this.stemValues.get(stem);
+					return stemValues.get(stem);
 				}
 			}
 			return 0;
 		}
 		return value;
 	}
-	
+
+	// TODO: file operation has nothing to do with dictionary
 	private BufferedReader getBufferedReader(String path, String encoding) {
 
 		BufferedReader br = null;
 		try {
 			br = new BufferedReader(new InputStreamReader(new FileInputStream(path), encoding));
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		} catch (FileNotFoundException e) {
+		} catch (UnsupportedEncodingException | FileNotFoundException e) {
 			e.printStackTrace();
 		}
 		return br;
 		
 	}
-	
+
+	// TODO: file operation has nothing to do with dictionary
 	private void readSentiDataList(String pathToSentiDataFile, String classValue) {
 		BufferedReader br;
 		String line;
-		Map svalues = new HashMap<String, Float>();
 		br = getBufferedReader(pathToSentiDataFile, "utf-8");
 		try {
 			while ((line = br.readLine()) != null) {
 				if (!line.isEmpty()) {
 					String[] ls = line.split("\t");
 					if (ls.length >= 2) {
-						String word = ls[0]; 
+						String word = ls[0];
 						try {
-						float so = Float.parseFloat(ls[1]);
-							// It priorizes the existing value
-							// System.out.println("word: "+word+" endswith(*): "+word.endsWith("*")+"
-							// so:"+so+" length dict: "+this.stemValues.size());
-							// System.out.println("aux salues size: "+svalues.size());
+							float so = Float.parseFloat(ls[1]);
 							if (!word.endsWith("*")) {
-							this.values.put(word, so);
+								values.put(word, so);
 							} else {
-								// System.out.println("...adding: "+word.replace("*",""));
-								// System.out.println(this.stemValues);
-								// svalues.put(word.replace("*",""), so);
-								// if (this.stemValues.isEmpty()){
-								// System.out.println("...adding: "+word.replace("*",""));
-								// }
-								this.stemValues.put(word.replace("*", ""), so);
-						}
-							if (classValue != null) {
-							if (this.classValues.containsKey(classValue))
-									this.classValues.get(classValue).put(word, so);
-								else {
-									Map<String, Float> aux = new HashMap<String, Float>();
-								aux.put(word, so);
-									this.classValues.put(classValue, aux);
+								stemValues.put(word.replace("*", ""), so);
 							}
-						}
+							if (classValue != null) {
+								if (classValues.containsKey(classValue)) {
+									classValues.get(classValue).put(word, so);
+								} else {
+									Map<String, Float> aux = new HashMap<>();
+									aux.put(word, so);
+									classValues.put(classValue, aux);
+								}
+							}
 						} catch (NumberFormatException e) {
 							// ERROR reading file with two columns, but second column is not a float
 						}
 					}
 				}
 			}
-		} catch (NumberFormatException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
+		} catch (NumberFormatException | IOException e) {
 			e.printStackTrace();
 		}
 	}
-	
-	private void readBoosterList(String pathToSentiDataFile, String classValue) {
-		BufferedReader br;
-		String line;
-		
-		br = getBufferedReader(pathToSentiDataFile, "utf-8");
-		try {
-			while ((line = br.readLine()) != null) {
-				if (!line.isEmpty()) {
-					String[] ls = line.split("\t");
-					if (ls.length >= 2) {
-						String word = ls[0]; 
-						try {
-						float so = Float.parseFloat(ls[1]);
-							if (classValue != null) {
-							if (this.classValues.containsKey(classValue))
-									this.classValues.get(classValue).put(word, so);
-								else {
-									Map<String, Float> aux = new HashMap<String, Float>();
-								aux.put(word, so);
-									this.classValues.put(classValue, aux);
-							}
-						}
-						} catch (NumberFormatException e) {
-							// ERROR reading file with two columns, but second column is not a float
-						}
-					}
-				}
-			}
-		} catch (NumberFormatException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
+
+	// TODO: file operation has nothing to do with dictionary
+    private void readBoosterList(String pathToSentiDataFile, String classValue) {
+        BufferedReader br;
+        String line;
+
+        br = getBufferedReader(pathToSentiDataFile, "utf-8");
+        try {
+            while ((line = br.readLine()) != null) {
+                if (!line.isEmpty()) {
+                    String[] ls = line.split("\t");
+                    if (ls.length >= 2) {
+                        String word = ls[0];
+                        try {
+                            float so = Float.parseFloat(ls[1]);
+                            if (classValue != null) {
+                                if (this.classValues.containsKey(classValue))
+                                    this.classValues.get(classValue).put(word, so);
+                                else {
+                                    Map<String, Float> aux = new HashMap<String, Float>();
+                                    aux.put(word, so);
+                                    this.classValues.put(classValue, aux);
+                                }
+                            }
+                        } catch (NumberFormatException e) {
+                            // ERROR reading file with two columns, but second column is not a float
+                        }
+                    }
+                }
+            }
+        } catch (NumberFormatException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+	// TODO: file operation has nothing to do with dictionary
 	private void readLemmaList(String pathToSentiDataFile, String classValue) {
 		BufferedReader br;
 		String line;
@@ -337,7 +308,8 @@ public class Dictionary {
 			e.printStackTrace();
 		}
 	}
-	
+
+	// TODO: file operation has nothing to do with dictionary
 	private void readEmoticonList(String pathToSentiDataFile) {
 		
 		BufferedReader br;
@@ -364,7 +336,8 @@ public class Dictionary {
 		}
 		
 	}
-	
+
+	// TODO: file operation has nothing to do with dictionary
 	private void readLemmasStrippers(String pathToWordToLemmasStrippingList) {
 		
 		BufferedReader br;
@@ -389,7 +362,8 @@ public class Dictionary {
 		}
 		
 	}
-	
+
+	// TODO: file operation has nothing to do with dictionary
 	private void readNegatingWordsList(String pathToSentiDataFile) {
 		
 		BufferedReader br;
@@ -415,7 +389,7 @@ public class Dictionary {
 	
 	/**
 	 * Files inside SentiData must be in utf-8 format.
-	 * 
+	 * 	// TODO: file operation has nothing to do with dictionary
 	 */
 	public void readSentiData(String pathToSentiData) {
 		
@@ -458,37 +432,36 @@ public class Dictionary {
 	}
 	
 	public boolean isWeight(String lemma) {
-		// System.out.println(lemma+"
-		// "+this.classValues.get(Operation.WEIGHT).get(lemma));
-		if (this.classValues.get(Operation.WEIGHT) == null)
+		if (classValues.get(Operation.WEIGHT) == null) {
 			return false;
-		return this.classValues.get(Operation.WEIGHT).get(lemma) != null;
+		}
+		return classValues.get(Operation.WEIGHT).get(lemma) != null;
 	}
-	
+
+	/**
+	 * @return The semantic orientation of the lemma or zero if the word has no
+	 *         subjectivity.
+	 */
 	public float getValue(String classWord, String lemma, boolean relaxed) {
-		/**
-		 * @return The semantic orientation of the lemma or zero if the word has no
-		 *         subjectivity.
-		 */
 
 		Float value = null;
 		String lowerCaseLemma = lemma.toLowerCase();
 		Map<String, Float> values = classValues.get(classWord);
 		if (values != null) {
 			value = values.get(lowerCaseLemma);
-			if (this.adverbsIntensifiers.contains(lowerCaseLemma)) {
+			if (adverbsIntensifiers.contains(lowerCaseLemma)) {
 				// System.out.println("Entra getValue: "+lowerCaseLemma);
 				// value = (float) 0;
 			}
 		}
 		
 		if (((values == null || value == null) && relaxed)
-				|| ((values == null || value == null) && !this.thereIsClassEmotionDict)) {
+				|| ((values == null || value == null) && !thereIsClassEmotionDict)) {
 			value = getValue(lowerCaseLemma);
 		}
 		
-		if (this.emoticons.containsKey(lowerCaseLemma)) {
-			value = this.emoticons.get(lowerCaseLemma);
+		if (emoticons.containsKey(lowerCaseLemma)) {
+			value = emoticons.get(lowerCaseLemma);
 		}
 		
 		if (value == null)
@@ -511,8 +484,9 @@ public class Dictionary {
 	 */
 	private String getLemma(String word) {
 		String lemma = lemmas.get(word);
-		if (lemma == null)
+		if (lemma == null) {
 			return word;
+		}
 		return lemma;
 	}
 	
@@ -526,11 +500,14 @@ public class Dictionary {
 		String wordLowerCase = word.toLowerCase();
 		String lemma;
 		Map<String, String> lemmas = classLemmas.get(postag);
-		if (lemmas == null)
+
+		if (lemmas == null) {
 			return getLemma(wordLowerCase);
+		}
 		lemma = lemmas.get(wordLowerCase); 
-		if (lemma == null)
+		if (lemma == null) {
 			return wordLowerCase;
+		}
 		return lemma;
 	}
 	
@@ -554,8 +531,9 @@ public class Dictionary {
 			}
 		}
 		// System.out.println("word: "+wordLowerCase+" lemmaStripped: "+lemma);
-		if (lemma == null)
+		if (lemma == null) {
 			return wordLowerCase;
+		}
 		return lemma;
 		
 	}
