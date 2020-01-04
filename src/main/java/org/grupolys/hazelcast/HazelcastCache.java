@@ -9,24 +9,30 @@ import java.nio.file.Paths;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 
-import org.grupolys.profiles.FilesystemProfileCreator;
 import org.grupolys.profiles.Profile;
+import org.grupolys.profiles.ProfileCreator;
 import org.grupolys.profiles.exception.ProfileNotFoundException;
+import org.grupolys.spring.service.ConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class HazelcastCache {
 
-    private HazelcastInstance hz;
+    private final HazelcastInstance hazelcastInstance;
+
+    private final ProfileCreator profileCreator;
 
     @Autowired
-    HazelcastCache(HazelcastInstance hz, HazelcastListener hzl) {
-        String directory = FilesystemProfileCreator.PROFILES_DIR;
-        IMap<String, Profile> map = hz.getMap("profileData");
+    HazelcastCache(HazelcastInstance hazelcastInstance,
+                   HazelcastListener hzl,
+                   ConfigService configService,
+                   ProfileCreator profileCreator) {
+        String directory = ConfigService.UUUSA_PROFILES_PATH; //FilesystemProfileCreator.PROFILES_DIR;
+        IMap<String, Profile> map = hazelcastInstance.getMap("profileData");
         map.addEntryListener(hzl, true);
 
-        FilesystemProfileCreator fpc = new FilesystemProfileCreator();
+//        FilesystemProfileCreator fpc = new FilesystemProfileCreator();
 
         // FilesystemProfileCreator.PROFILES_DIR;
         try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Paths.get(directory))) {
@@ -35,7 +41,7 @@ public class HazelcastCache {
                 if (!map.containsKey(profileName)) {
                     map.lock(profileName);
                     try {
-                        Profile profile = fpc.loadProfile(profileName);
+                        Profile profile = profileCreator.loadProfile(profileName);
                         map.put(profileName, profile);
                     } catch (ProfileNotFoundException e) {
                         e.printStackTrace();
@@ -48,7 +54,8 @@ public class HazelcastCache {
             e.printStackTrace();
         }
 
-        this.hz = hz;
+        this.hazelcastInstance = hazelcastInstance;
+        this.profileCreator = profileCreator;
         // RuleBasedAnalyser rba = prepare(fspc.loadProfile(profileName));
         // Processor processor = prepareProcessor("/opt/uuusa/data/profiles/" +
         // profileName);
@@ -57,11 +64,11 @@ public class HazelcastCache {
     }
 
     public void updateRules(String profileName) {
-        FilesystemProfileCreator fpc = new FilesystemProfileCreator();
-        IMap<String, Profile> map = hz.getMap("profileData");
+//        FilesystemProfileCreator fpc = new FilesystemProfileCreator();
+        IMap<String, Profile> map = hazelcastInstance.getMap("profileData");
         map.lock(profileName);
         try {
-            Profile profile = fpc.loadProfile(profileName);
+            Profile profile = profileCreator.loadProfile(profileName);
             map.put(profileName, profile);
         } catch (ProfileNotFoundException e) {
             e.printStackTrace();

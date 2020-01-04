@@ -3,7 +3,6 @@ package org.grupolys.samulan.analyser.operation;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.grupolys.samulan.util.Dictionary;
 import org.grupolys.samulan.util.OperationValue;
 import org.grupolys.samulan.util.SentimentInformation;
 

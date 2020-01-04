@@ -6,6 +6,7 @@ import org.grupolys.samulan.processor.Processor;
 import org.grupolys.samulan.processor.parser.MaltParserWrapper;
 import org.grupolys.samulan.processor.tagger.MaxentStanfordTagger;
 import org.grupolys.samulan.processor.tokenizer.ARKTwokenizer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,10 +14,11 @@ public class SamulanProcessorService {
 
     private Processor processor = null;
 
-    SamulanProcessorService() {
+    @Autowired
+    SamulanProcessorService(ConfigService configService) {
         ARKTwokenizer arktokenizer = new ARKTwokenizer();
 
-        String taggerDir = "/opt/uuusa/data/taggers";
+        String taggerDir = configService.UUUSA_TAGGERS_PATH; // "/opt/uuusa/data/taggers";
 
         File folderSentiData = new File(taggerDir);
         File[] files = folderSentiData.listFiles();
@@ -36,7 +38,7 @@ public class SamulanProcessorService {
         } else {
             // builds the tagger
             MaxentStanfordTagger tagger = new MaxentStanfordTagger(pathStanfordTagger);
-            String parserDir = "/opt/uuusa/data/parsers/0";
+            String parserDir = configService.UUUSA_PARSERS_PATH + "/0"; // "/opt/uuusa/data/parsers/0";
             MaltParserWrapper parser = new MaltParserWrapper(parserDir);
             processor = new Processor(arktokenizer, tagger, parser);
         }

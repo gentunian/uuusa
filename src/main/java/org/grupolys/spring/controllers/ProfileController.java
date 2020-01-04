@@ -31,11 +31,12 @@ public class ProfileController {
 
     @Autowired
     private HazelcastCache cache;
+    @Autowired
+    private FilesystemProfileCreator fpc;
 
     @GetMapping("/profiles")
     public ResponseEntity<String[]> getProfiles() {
         HttpStatus httpStatus = HttpStatus.OK;
-        FilesystemProfileCreator fpc = new FilesystemProfileCreator();
         String[] profiles = fpc.profiles();
 
         return new ResponseEntity<String[]>(profiles, httpStatus);
@@ -44,7 +45,6 @@ public class ProfileController {
     @PutMapping("/profiles/{name}")
     public ResponseEntity<Profile> putProfile(@PathVariable String name, @RequestBody @Valid Profile newProfile) {
         HttpStatus httpStatus = HttpStatus.OK;
-        FilesystemProfileCreator fpc = new FilesystemProfileCreator();
         Profile profile = null;
 
         try {
@@ -64,33 +64,12 @@ public class ProfileController {
         return new ResponseEntity<Profile>(profile, httpStatus);
     }
 
-    // @PutMapping("/profiles/{name}/words/{pos}/{word}/{weight}")
-    // public ResponseEntity<String> putProfilePos(@PathVariable String name, @PathVariable String pos,
-    //         @PathVariable String word, @PathVariable Float weight) {
-    //     HttpStatus httpStatus = HttpStatus.OK;
-    //     FilesystemProfileCreator fpc = new FilesystemProfileCreator();
-    //     Profile profile = null;
-
-    //     try {
-    //         profile = fpc.loadProfile(name);
-    //     } catch (ProfileNotFoundException e) {
-    //         profile = new Profile();
-    //     }
-
-    //     profile.addEmotion(pos, word.toLowerCase(), weight);
-    //     fpc.saveProfile(name, profile);
-    //     Utils.updateRules(name);
-    //     String response = "{\"message\": \"OK\"}";
-    //     return new ResponseEntity<String>(response, httpStatus);
-    // }
-
     @PostMapping("/profiles/{name}/words/{pos}")
     public ResponseEntity<String> postProfilePos(@PathVariable String name, @PathVariable String pos,
             @RequestBody @Valid Map<String, Object> body) {
 
         HttpStatus httpStatus = HttpStatus.OK;
         String response = "";
-        FilesystemProfileCreator fpc = new FilesystemProfileCreator();
         Profile profile = null;
 
         try {
@@ -149,7 +128,6 @@ public class ProfileController {
             @PathVariable String word) {
         HttpStatus httpStatus = HttpStatus.OK;
         String response = "{\"message\": \"OK\"}";
-        FilesystemProfileCreator fpc = new FilesystemProfileCreator();
         Profile profile = null;
 
         try {
@@ -185,7 +163,6 @@ public class ProfileController {
             @PathVariable String pos) {
         HttpStatus httpStatus = HttpStatus.OK;
         Map<String, List<Map<String, Object>>> response = new HashMap<String, List<Map<String, Object>>>();
-        FilesystemProfileCreator fpc = new FilesystemProfileCreator();
         Profile profile = null;
 
         try {

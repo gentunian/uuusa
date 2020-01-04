@@ -15,11 +15,15 @@ import com.hazelcast.spi.discovery.DiscoveryStrategy;
 import com.hazelcast.spi.discovery.DiscoveryStrategyFactory;
 
 import org.grupolys.hazelcast.discovery.HazelcastCustomDiscovery;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class HazelcastConfiguration {
+    @Value("${hz.ip}")
+    private String ip;
+
     @Bean
     public Config config() {
         Config config = new Config();
@@ -29,8 +33,8 @@ public class HazelcastConfiguration {
         config.setProperty("hazelcast.discovery.enabled", "true");
         config.setProperty("hazelcast.socket.bind.any", "false");
         config.setProperty("hazelcast.discovery.public.ip.enabled", "false");
-        config.setProperty("hazelcast.local.localAddress", System.getenv("IP"));
-        config.setProperty("hazelcast.local.publicAddress", System.getenv("IP"));
+        config.setProperty("hazelcast.local.localAddress", ip);
+        config.setProperty("hazelcast.local.publicAddress", ip);
 
         DiscoveryConfig discoveryConfig = joinConfig.getDiscoveryConfig();
         DiscoveryStrategyConfig strategyConfig = new DiscoveryStrategyConfig(new DiscoveryStrategyFactory() {

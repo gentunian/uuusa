@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.grupolys.samulan.analyser.operation.DefaultOperation;
 import org.grupolys.samulan.analyser.operation.Operation;
 import org.grupolys.samulan.util.SentimentDependencyGraph;
 import org.grupolys.samulan.util.SentimentDependencyNode;
@@ -24,9 +25,24 @@ public class Rule {
 	private short priority;
 	private Operation operation;
 
-	
-	public Rule(Set<Pattern> regexs, Set<String> regexsForms, Set<String> postags, Set<String> dependencies,
-			short levelsup, short priority, Set<String> validHead, Operation operation){
+	public Rule() {
+		this(new HashSet<>(),
+				new HashSet<>(),
+				new HashSet<>(),
+				new HashSet<>(),
+				(short) 0,
+				new HashSet<>(),
+				new DefaultOperation(null));
+	}
+
+	public Rule(Set<Pattern> regexs,
+				Set<String> regexsForms,
+				Set<String> postags,
+				Set<String> dependencies,
+				short levelsup,
+				short priority,
+				Set<String> validHead,
+				Operation operation) {
 		
 		this.regexs = regexs;
 		this.regexsForms = regexsForms;
@@ -144,7 +160,7 @@ public class Rule {
 	/**
 	 * Determines if a rule is applicable in the node
 	 * @param dn a dependency node of the graph
-	 * @see es.udc.fi.dc.lys.nlputils.DependencyNode
+	 * see es.udc.fi.dc.lys.nlputils.DependencyNode
 	 * @return true if the rule is applicable in that node, false otherwise
 	 */
 	public boolean match(SentimentDependencyGraph dg,SentimentDependencyNode dn){
