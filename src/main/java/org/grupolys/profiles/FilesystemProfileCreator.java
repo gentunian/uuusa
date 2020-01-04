@@ -21,8 +21,14 @@ import java.util.stream.Stream;
 import java.util.Arrays;
 
 import org.grupolys.profiles.exception.ProfileNotFoundException;
-import org.grupolys.samulan.util.Dictionary;
+import org.grupolys.samulan.util.dictionary.FilesystemDictionary;
+import org.grupolys.spring.service.ConfigService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
 
+@Service
+@ConditionalOnProperty(prefix = "profileCreator", name = "Impl", havingValue = "Filesystem")
 public class FilesystemProfileCreator implements ProfileCreator {
 
     public class MyException extends Exception {
@@ -33,15 +39,22 @@ public class FilesystemProfileCreator implements ProfileCreator {
         }
     }
 
+    private ConfigService configService;
+
+    @Autowired
+    public final void setConfigService(ConfigService configService) {
+        this.configService = configService;
+    }
+
     public static final String DEFAULT_TAGGER = "es-bidirectional-distsim.tagger.tagger";
-    public static final String DATA_DIR = "/opt/uuusa/data";
-    public static final String PROFILES_DIR = DATA_DIR + File.separator + "profiles";
-    public static final String TAGGERS_DIR = DATA_DIR + File.separator + "taggers";
-    public static final String PARSERS_DIR = DATA_DIR + File.separator + "parsers";
+//    public static final String DATA_DIR = "/opt/uuusa/data";
+//    public static final String PROFILES_DIR = configService.UUUSA_PROFILES_PATH; // DATA_DIR + File.separator + "profiles";
+//    public static final String TAGGERS_DIR = configService.UUUSA_TAGGERS_PATH; // DATA_DIR + File.separator + "taggers";
+//    public static final String PARSERS_DIR = configService.UUUSA_PARSERS_PATH; // DATA_DIR + File.separator + "parsers";
 
     @Override
     public boolean saveProfile(String profileName, Profile profile) {
-        String profileDirectory = PROFILES_DIR + File.separator + profileName;
+        String profileDirectory = configService.UUUSA_PROFILES_PATH + File.separator + profileName;
 
         // if the directory already exists this will return false
         // we need to check for dir existence anyhow
@@ -56,14 +69,13 @@ public class FilesystemProfileCreator implements ProfileCreator {
             for (String key : emotions.keySet()) {
                 String partOfSpeech = getPartOfSpeech(key);
                 if (partOfSpeech != null) {
-                    String filename = profileDirectory + File.separator + partOfSpeech + Dictionary.POSTAG_SEPARATOR
-                            + Dictionary.EMOTION_LIST;
+                    String filename = getEmotionsFilePath(profileDirectory, partOfSpeech);
                     saveMapOfWeights(filename, emotions.get(key));
                 }
             }
-            saveMapOfWeights(profileDirectory + File.separator + Dictionary.BOOSTER_LIST, profile.getBoosters());
-            saveMapOfWeights(profileDirectory + File.separator + Dictionary.EMOTICON_LIST, profile.getEmoticons());
-            saveListOfWords(profileDirectory + File.separator + Dictionary.NEGATING_LIST, profile.getNegating());
+            saveMapOfWeights(getBoosterFilePath(profileDirectory), profile.getBoosters());
+            saveMapOfWeights(getEmoticonsFilePath(profileDirectory), profile.getEmoticons());
+            saveListOfWords(getNegatingFilePath(profileDirectory), profile.getNegating());
         } catch (MyException e) {
             // nothing to save
             e.printStackTrace();
@@ -125,7 +137,7 @@ public class FilesystemProfileCreator implements ProfileCreator {
     }
 
     private void assignDefaultParser(String profileParserDirectory) {
-        String defaultParserDir = PARSERS_DIR + File.separator + '0';
+        String defaultParserDir = configService.UUUSA_PARSERS_PATH + File.separator + '0';
         Stream<Path> s = null;
 
         try {
@@ -148,7 +160,7 @@ public class FilesystemProfileCreator implements ProfileCreator {
     }
 
     private void assignDefaultTagger(String profileDirectory) {
-        String target = TAGGERS_DIR + File.separator + DEFAULT_TAGGER;
+        String target = configService.UUUSA_TAGGERS_PATH + File.separator + DEFAULT_TAGGER;
         String link = profileDirectory + File.separator + DEFAULT_TAGGER;
 
         try {
@@ -162,17 +174,16 @@ public class FilesystemProfileCreator implements ProfileCreator {
 
     @Override
     public Profile loadProfile(String profileName) throws ProfileNotFoundException {
-        String profileDirectory = PROFILES_DIR + File.separator + profileName;
+        String profileDirectory = configService.UUUSA_PROFILES_PATH + File.separator + profileName;
 
         if (!(new File(profileDirectory)).isDirectory()) {
-            throw new ProfileNotFoundException("Profile '" + profileName + "' not found at " + PROFILES_DIR);
+            throw new ProfileNotFoundException("Profile not found at: " + profileDirectory);
         }
 
         Profile profile = new Profile();
         Map<String, Map<String, Float>> emotions = new HashMap<String, Map<String, Float>>();
         for (PartOfSpeech pos : PartOfSpeech.values()) {
-            String emotionLookupFile = profileDirectory + File.separator + pos.name() + Dictionary.POSTAG_SEPARATOR
-                    + Dictionary.EMOTION_LIST;
+            String emotionLookupFile = getEmotionsFilePath(profileDirectory, pos.name());
             Map<String, Float> m = loadWordWeightFile(emotionLookupFile);
             if (m != null) {
                 emotions.put(pos.name(), m);
@@ -180,21 +191,21 @@ public class FilesystemProfileCreator implements ProfileCreator {
         }
         profile.setEmotions(emotions);
 
-        Map<String, Float> boosters = loadWordWeightFile(profileDirectory + File.separator + Dictionary.BOOSTER_LIST);
+        Map<String, Float> boosters = loadWordWeightFile(getBoosterFilePath(profileDirectory));
         if (boosters == null) {
             // if null, create an empty map
             boosters = new HashMap<String, Float>();
         }
         profile.setBoosters(boosters);
 
-        Map<String, Float> emoticons = loadWordWeightFile(profileDirectory + File.separator + Dictionary.EMOTICON_LIST);
+        Map<String, Float> emoticons = loadWordWeightFile(getEmoticonsFilePath(profileDirectory));
         if (emoticons == null) {
             // if null, create an empty map
             emoticons = new HashMap<String, Float>();
         }
         profile.setEmoticons(emoticons);
 
-        List<String> negating = loadNegatingWordsFile(profileDirectory + File.separator + Dictionary.NEGATING_LIST);
+        List<String> negating = loadNegatingWordsFile(getNegatingFilePath(profileDirectory));
         if (negating == null) {
             // if null, create an empty list
             negating = new ArrayList<String>();
@@ -233,7 +244,7 @@ public class FilesystemProfileCreator implements ProfileCreator {
 
     @Override
     public String[] profiles() {
-        String profileDirectory = PROFILES_DIR + File.separator ;
+        String profileDirectory = configService.UUUSA_PROFILES_PATH + File.separator ;
 
         return  Arrays
             .stream(new File(profileDirectory).listFiles(File::isDirectory))
@@ -242,4 +253,22 @@ public class FilesystemProfileCreator implements ProfileCreator {
 
     }
 
+    private String getBoosterFilePath(String dir) {
+        return Paths.get(dir, FilesystemDictionary.LookupFiles.BOOSTER_LIST.getFilename()).toString();
+    }
+
+    private String getEmotionsFilePath(String dir, String pos) {
+        return Paths.get(dir, pos +
+                FilesystemDictionary.LookupFiles.POSTAG_SEPARATOR.getFilename() +
+                FilesystemDictionary.LookupFiles.EMOTION_LIST.getFilename())
+                .toString();
+    }
+
+    private String getEmoticonsFilePath(String dir) {
+        return Paths.get(dir, FilesystemDictionary.LookupFiles.EMOTICON_LIST.getFilename()).toString();
+    }
+
+    private String getNegatingFilePath(String dir) {
+        return Paths.get(dir, FilesystemDictionary.LookupFiles.NEGATING_LIST.getFilename()).toString();
+    }
 }

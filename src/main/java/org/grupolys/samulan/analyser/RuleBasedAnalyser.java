@@ -1,15 +1,13 @@
 package org.grupolys.samulan.analyser;
 
-
-import org.grupolys.samulan.analyser.sentimentjoiner.SentimentJoiner;
-import org.grupolys.samulan.rule.RuleManager;
+import org.grupolys.samulan.rule.RulesManager;
 
 public abstract class RuleBasedAnalyser implements Analyser {
 	
 	protected AnalyserConfiguration ac;
-	protected RuleManager rm;
+	protected RulesManager rm;
 	
-	public RuleBasedAnalyser(AnalyserConfiguration ac, RuleManager rm) {
+	public RuleBasedAnalyser(AnalyserConfiguration ac, RulesManager rm) {
 		this.ac = ac;
 		this.rm = rm;
 	}
@@ -22,11 +20,11 @@ public abstract class RuleBasedAnalyser implements Analyser {
 		this.ac = ac;
 	}
 
-	public RuleManager getRm() {
+	public RulesManager getRm() {
 		return rm;
 	}
 
-	public void setRm(RuleManager rm) {
+	public void setRm(RulesManager rm) {
 		this.rm = rm;
 	}
 	

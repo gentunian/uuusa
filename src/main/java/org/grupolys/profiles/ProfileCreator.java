@@ -2,7 +2,7 @@ package org.grupolys.profiles;
 
 import org.grupolys.profiles.exception.ProfileNotFoundException;
 
-interface ProfileCreator {
+public interface ProfileCreator {
     /**
      * Stores profile information with name {@literal}profileName.
      * 
