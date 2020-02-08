@@ -1,7 +1,6 @@
 package org.grupolys.samulan.util.dictionary;
 
 import org.grupolys.samulan.analyser.operation.Operation;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.*;
 
@@ -12,17 +11,17 @@ import java.util.*;
  */
 public abstract class AbstractDictionary implements Dictionary {
 
-//    private static final String VALUES = "values";
-//    private static final String CLASS_VALUES = "class.values";
-//    private static final String STEM_VALUES = "stem.values";
-//    private static final String CLASS_LEMMA_VALUES = "class.lemma.values";
-//    private static final String EMOTICONS_VALUES = "emoticons.values";
-//    private static final String NEGATING_WORDS_VALUES = "negating.words.values";
-//    private static final String ADVERSATIVE_WORDS_VALUES = "adversative.words.values";
-//    private static final String ADVERBS_INTENSIFIER_VALUES = "adverbs.intensifier.values";
-//    private static final String LEMMA_STRIPPERS_VALUES = "lemma.strippers.values";
-//    private static final String LEMMAS_VALUES = "lemma.values";
-//    private Map<String, DictionaryValues> dict;
+    private static final String VALUES = "values";
+    private static final String CLASS_VALUES = "class.values";
+    private static final String STEM_VALUES = "stem.values";
+    private static final String CLASS_LEMMA_VALUES = "class.lemma.values";
+    private static final String EMOTICONS_VALUES = "emoticons.values";
+    private static final String NEGATING_WORDS_VALUES = "negating.words.values";
+    private static final String ADVERSATIVE_WORDS_VALUES = "adversative.words.values";
+    private static final String ADVERBS_INTENSIFIER_VALUES = "adverbs.intensifier.values";
+    private static final String LEMMA_STRIPPERS_VALUES = "lemma.strippers.values";
+    private static final String LEMMAS_VALUES = "lemma.values";
+    private Map<String, DictionaryValues> dict;
 
     private WordsValues wordsValues = new WordsValues();
     private ClassValues classValues = new ClassValues();
@@ -37,18 +36,18 @@ public abstract class AbstractDictionary implements Dictionary {
     private boolean thereIsClassEmotionDict = false;
 
     public AbstractDictionary() {
-//        dict = new HashMap<>();
-//        dict.put(VALUES, new WordsValues());
-//        dict.put(CLASS_VALUES, new ClassValues());
-//        dict.put(STEM_VALUES, new StemValues());
-//        dict.put(CLASS_LEMMA_VALUES, new ClassLemmasValues());
-//        dict.put(EMOTICONS_VALUES, new EmoticonsValues());
-//        dict.put(NEGATING_WORDS_VALUES, new NegatingWordsValues());
-//        dict.put(ADVERSATIVE_WORDS_VALUES, new AdversativeWordsValues());
-//        dict.put(ADVERBS_INTENSIFIER_VALUES, new AdverbsIntensifiersValue());
-//        dict.put(LEMMA_STRIPPERS_VALUES, new LemmaStrippersValues());
-//        dict.put(LEMMAS_VALUES, new LemmasValues());
-//        this.thereIsClassEmotionDict = false;
+        dict = new HashMap<>();
+        dict.put(VALUES, new WordsValues());
+        dict.put(CLASS_VALUES, new ClassValues());
+        dict.put(STEM_VALUES, new StemValues());
+        dict.put(CLASS_LEMMA_VALUES, new ClassLemmasValues());
+        dict.put(EMOTICONS_VALUES, new EmoticonsValues());
+        dict.put(NEGATING_WORDS_VALUES, new NegatingWordsValues());
+        dict.put(ADVERSATIVE_WORDS_VALUES, new AdversativeWordsValues());
+        dict.put(ADVERBS_INTENSIFIER_VALUES, new AdverbsIntensifiersValues());
+        dict.put(LEMMA_STRIPPERS_VALUES, new LemmaStrippersValues());
+        dict.put(LEMMAS_VALUES, new LemmasValues());
+        this.thereIsClassEmotionDict = false;
     }
 
     public Map<String, Float> getValues() {
