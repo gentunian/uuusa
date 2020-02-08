@@ -3,50 +3,37 @@ package org.grupolys.profiles;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.List;
 
 public enum PartOfSpeech {
     ADV("ADV", new String[] { "adverbs", "adverb", "adv" }),
-    ADJ("ADJ", new String[] { "adjetive", "adjetives", "adj" }), VERB("VERB", new String[] { "verb", "verbs" }),
+    ADJ("ADJ", new String[] { "adjective", "adjectives", "adj" }),
+    VERB("VERB", new String[] { "verb", "verbs" }),
     NOUN("NOUN", new String[] { "noun", "nouns" });
 
-    private Map<String, List<String>> partOfSpeech;
+    private Map<String, String> partOfSpeech;
 
-    PartOfSpeech(String partOfSpeech, String[] alias) {
-        this.partOfSpeech = new HashMap<String, List<String>>();
-        this.partOfSpeech.put(partOfSpeech, Arrays.asList(alias));
-    }
-
-    public static String getPartOfSpeech(String alias) {
-        // Get all the enums, i.e., ADV, ADJ, VERB, and NOUN.
-        PartOfSpeech[] pos = PartOfSpeech.values();
-        String partOfSpeech = null;
-
-        // For each enum, try to find its alias
-        for (int i = 0; i < pos.length; i++) {
-            Map<String, List<String>> aliasesMap = pos[i].getAliasesMap();
-            Iterator<String> it = aliasesMap.keySet().iterator();
-
-            // iterate through all keys and try to find for an alias
-            while(it.hasNext() && partOfSpeech == null) {
-                String key = it.next();
-                List<String> aliases = aliasesMap.get(key);
-                if (aliases.contains(alias.toLowerCase())) {
-                    partOfSpeech = key;
-                }
-            }
+    PartOfSpeech(String pos, String[] alias) {
+        this.partOfSpeech = new HashMap<>();
+        for (String s : alias) {
+            this.partOfSpeech.put(s, pos);
         }
-
-        return partOfSpeech;
     }
 
-    public List<String> getAliases(String partOfSpeech) {
-        return Collections.unmodifiableList(this.partOfSpeech.get(partOfSpeech));
+    public static PartOfSpeech getPartOfSpeech(String alias) {
+        return alias == null ? null : Arrays.stream(PartOfSpeech.values())
+                .filter(item -> item.getAliasesMap().get(alias.toLowerCase()) != null)
+                .findFirst()
+                .orElse(null);
+
     }
 
-    public Map<String, List<String>> getAliasesMap() {
+//    public List<String> getAliases(String partOfSpeech) {
+//        return Collections.unmodifiableList(this.partOfSpeech.get(partOfSpeech));
+//    }
+
+    public Map<String, String> getAliasesMap() {
         return Collections.unmodifiableMap(this.partOfSpeech);
     }
+
 }
