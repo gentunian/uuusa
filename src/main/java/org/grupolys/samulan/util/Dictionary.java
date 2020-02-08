@@ -16,9 +16,14 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.grupolys.samulan.analyser.operation.Operation;
+import org.grupolys.samulan.util.dictionary.ClassLemmasValues;
+import org.grupolys.samulan.util.dictionary.ClassValues;
+import org.grupolys.samulan.util.dictionary.LemmasValues;
+import org.grupolys.samulan.util.dictionary.WordsValues;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 @Deprecated
-public class Dictionary {
+public class Dictionary implements org.grupolys.samulan.util.dictionary.Dictionary {
 	
 	public static final String EMOTION_LIST = "EmotionLookupTable.txt";
 	public static final String BOOSTER_LIST =	"BoosterWordList.txt";
@@ -438,6 +443,26 @@ public class Dictionary {
 		return classValues.get(Operation.WEIGHT).get(lemma) != null;
 	}
 
+	@Override
+	public void addWordsValues(WordsValues values) {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public void addLemmasValues(LemmasValues values) {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public void addClassValues(ClassValues values) {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public void addClassLemmasValues(ClassLemmasValues values) {
+		throw new NotImplementedException();
+	}
+
 	/**
 	 * @return The semantic orientation of the lemma or zero if the word has no
 	 *         subjectivity.
@@ -537,7 +562,17 @@ public class Dictionary {
 		return lemma;
 		
 	}
-	
+
+	@Override
+	public void setClassEmotionDict(boolean classEmotionDict) {
+		thereIsClassEmotionDict = classEmotionDict;
+	}
+
+	@Override
+	public boolean getClassEmotionDict() {
+		return thereIsClassEmotionDict;
+	}
+
 	public void addHashMapValues(Map<String, Float> values) {
 		this.values.putAll(values);
 	}
