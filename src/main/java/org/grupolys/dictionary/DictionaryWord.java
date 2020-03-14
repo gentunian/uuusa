@@ -1,8 +1,10 @@
 package org.grupolys.dictionary;
 
 import org.grupolys.profiles.PartOfSpeech;
+import org.grupolys.samulan.util.dictionary.Dictionary;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -23,6 +25,7 @@ public interface DictionaryWord {
      * @return the word lemma for this word based on specific part of speech or null if it doesn't have a lemma.
      */
     DictionaryWord getLemma(PartOfSpeech partOfSpeech);
+    Map<PartOfSpeech, DictionaryWord> getLemmas();
 
     /**
      * Returns the string this DictionaryWord represents.
@@ -32,11 +35,14 @@ public interface DictionaryWord {
 
     /**
      * Adds a value for this DictionaryWord that the word should have when its part of speech is partOfSpeech.
-     * @param partOfSpeech part of speech that determines which role this word plays in a sentence.
      * @param value the value this word should have when its part of speech is partOfSpeech.
+     * @param partOfSpeech part of speech that determines which role this word plays in a sentence.
      */
-    void addValue(PartOfSpeech partOfSpeech, float value);
-    void addLemma(PartOfSpeech partOfSpeech, DictionaryWord lemma);
+    Float addValue(float value, PartOfSpeech partOfSpeech);
+    boolean removeValue(PartOfSpeech partOfSpeech);
+
+    DictionaryWord addLemma(DictionaryWord lemma, PartOfSpeech partOfSpeech);
+    boolean removeLemma(PartOfSpeech partOfSpeech);
 
     /**
      * Returns the value this word has when its part of speech in a sentence is partOfSpeech, or null if
@@ -52,6 +58,8 @@ public interface DictionaryWord {
      */
     Float getValue();
 
+    Map<PartOfSpeech, Float> getValues();
+
     /**
      * Returns an optimistic value for this word, that is, if a lemma is present then lemma should have precedence.
      * @param partOfSpeech the part of speech we want to retrieve for this word.
@@ -59,5 +67,11 @@ public interface DictionaryWord {
      */
     Float getOptimisticValue(PartOfSpeech partOfSpeech);
 
-    Set<String> getAllPartOfSpeech();
+    Set<PartOfSpeech> getAllPartOfSpeech();
+
+    boolean isNegating();
+
+    boolean isBooster();
+
+    float getBoosterValue();
 }

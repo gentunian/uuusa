@@ -1,5 +1,9 @@
 package org.grupolys.samulan.rule;
 
+import org.apache.commons.lang.NotImplementedException;
+import org.grupolys.dictionary.DefaultWordType;
+import org.grupolys.dictionary.Word;
+import org.grupolys.dictionary.WordsDictionary;
 import org.grupolys.samulan.analyser.operation.*;
 import org.grupolys.samulan.util.dictionary.Dictionary;
 import org.grupolys.samulan.util.SentimentDependencyGraph;
@@ -10,6 +14,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import scala.io.BytePickle;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -52,12 +57,12 @@ public class XmlRulesManager implements RulesManager {
 
 
     private List<Rule> rules;
-    private Dictionary dictionary;
+    private WordsDictionary dictionary;
     private boolean alwaysShift = true;
     private Pattern alphaNumericPattern = Pattern.compile("^[\\-'a-zA-Z0-9]");
     private Pattern nonAlphaNumericPattern = Pattern.compile("[^.+]");
 
-    public XmlRulesManager(Dictionary dictionary, String rulesPath) {
+    public XmlRulesManager(WordsDictionary dictionary, String rulesPath) {
         this.rules = new ArrayList<>();
         this.dictionary = dictionary;
         this.rules.add(new Rule());
@@ -82,7 +87,7 @@ public class XmlRulesManager implements RulesManager {
     }
 
     public void setDictionary(Dictionary dictionary) {
-        this.dictionary = dictionary;
+        throw new NotImplementedException("setDictionary() not implemented.");
     }
 
 
@@ -222,7 +227,9 @@ public class XmlRulesManager implements RulesManager {
 
         float shiftValue;
         if (parameters[0].equals(SENTIDATA)) {
-            shiftValue = dictionary.getValue(Operation.SHIFT, form, true);
+            // current code does not uses Operation.SHIFT in dictionary
+//            shiftValue = dictionary.getValue(Operation.SHIFT, form, true);
+            shiftValue = 0;
         } else {
         	shiftValue = Float.parseFloat(parameters[0]);
 		}
@@ -250,7 +257,9 @@ public class XmlRulesManager implements RulesManager {
 
         float weightingValue;
         if (parameters[0].equals(SENTIDATA)) {
-            weightingValue = dictionary.getValue(Operation.WEIGHT, form, true);
+            // getValue(Operation.WEIGHT) refers to booster words.
+//            weightingValue = dictionary.getValue(Operation.WEIGHT, form, true);
+            weightingValue = dictionary.getWord(form).getBoosterValue();
         } else {
             weightingValue = Float.parseFloat(parameters[0]);
         }
@@ -300,7 +309,6 @@ public class XmlRulesManager implements RulesManager {
     }
 
     public void readRules(String pathXML) {
-        Operation o;
         try {
             File file = new File(pathXML);
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -318,12 +326,12 @@ public class XmlRulesManager implements RulesManager {
                 if (fstNode.getNodeType() == Node.ELEMENT_NODE) {
 
                     Element fstElement = (Element) fstNode;
-                    Set<String> forms = new HashSet<String>(Arrays.asList(this.getXMLNodeValue(fstElement, FORM).split(",")));
-                    Set<String> postags = new HashSet<String>(Arrays.asList(this.getXMLNodeValue(fstElement, POSTAG).split(",")));
-                    Set<String> dependencies = new HashSet<String>(Arrays.asList(this.getXMLNodeValue(fstElement, DEPENDENCY).split(",")));
+                    Set<String> forms = new HashSet<>(Arrays.asList(this.getXMLNodeValue(fstElement, FORM).split(",")));
+                    Set<String> postags = new HashSet<>(Arrays.asList(this.getXMLNodeValue(fstElement, POSTAG).split(",")));
+                    Set<String> dependencies = new HashSet<>(Arrays.asList(this.getXMLNodeValue(fstElement, DEPENDENCY).split(",")));
                     short levelsup = new Short(this.getXMLNodeValue(fstElement, LEVELSUP));
                     short priority = new Short(this.getXMLNodeValue(fstElement, PRIORITY));
-                    HashSet<String> validHead = new HashSet<String>(Arrays.asList(this.getXMLNodeValue(fstElement, VALID_HEAD).split(",")));
+                    HashSet<String> validHead = new HashSet<>(Arrays.asList(this.getXMLNodeValue(fstElement, VALID_HEAD).split(",")));
                     postags.remove("*"); //TODO process regex
                     dependencies.remove("*"); //TODO process regex
                     validHead.remove("*"); //TODO process regex
@@ -332,9 +340,9 @@ public class XmlRulesManager implements RulesManager {
                     if (forms.contains(SENTIDATA_BOOSTER)) {
                         if (forms.size() == 1) {
                             //System.out.println("getClassValues: "+this.d.getClassValues());
-                            if (this.dictionary.getClassValues().get(Operation.WEIGHT) != null) {
-                                addRules(fstElement, this.dictionary.getClassValues().get(Operation.WEIGHT).keySet(),
-                                        postags, dependencies, levelsup, priority,
+                            Map<String, ?> boosterWords = dictionary.getWordsByType(DefaultWordType.BOOSTER);
+                            if (boosterWords != null) {
+                                addRules(fstElement, boosterWords.keySet(), postags, dependencies, levelsup, priority,
                                         validHead);
                             }
                         } else {
@@ -345,10 +353,12 @@ public class XmlRulesManager implements RulesManager {
                     //NEGATION RULES WITH SENTIDATA
                     else if (forms.contains(SENTIDATA_NEGATION)) {
                         if (forms.size() == 1) {
-                            addRules(fstElement, this.dictionary.getNegatingWords(),
-                                    postags, dependencies, levelsup, priority,
-                                    validHead);
-
+                            Map<String, ?> negatingWords = dictionary.getWordsByType(DefaultWordType.NEGATING);
+                            if (negatingWords != null) {
+                                addRules(fstElement, negatingWords.keySet(),
+                                        postags, dependencies, levelsup, priority,
+                                        validHead);
+                            }
                         } else {
                             System.err.println("We cannot handle this kind of rules " + forms);
                         }

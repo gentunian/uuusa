@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Deprecated
 public class Profile implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -25,7 +26,7 @@ public class Profile implements Serializable {
             }
             for (String pos : profile.getEmotions().keySet()) {
                 Map<String, Float> m = profile.getEmotions().get(pos);
-                String posAlias = PartOfSpeech.getPartOfSpeech(pos);
+                String posAlias = PartOfSpeech.getPartOfSpeech(pos).name();
                 if (this.emotions.containsKey(posAlias)) {
                     this.emotions.get(posAlias).putAll(m);
                 } else {
@@ -113,7 +114,7 @@ public class Profile implements Serializable {
     }
 
     public void addEmotion(String pos, String word, Float weight) {
-        pos = PartOfSpeech.getPartOfSpeech(pos);
+        pos = PartOfSpeech.getPartOfSpeech(pos).name();
         if (this.emotions == null) {
             this.emotions = new HashMap<String, Map<String, Float>>();
         }

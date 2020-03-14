@@ -1,31 +1,20 @@
 package org.grupolys.spring.controllers;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import javax.validation.Valid;
 
 import org.grupolys.hazelcast.HazelcastCache;
-import org.grupolys.profiles.FilesystemProfileCreator;
-import org.grupolys.profiles.PartOfSpeech;
-import org.grupolys.profiles.Profile;
+import org.grupolys.profiles.*;
 import org.grupolys.profiles.exception.ProfileNotFoundException;
 import org.grupolys.spring.controllers.exception.InvalidPosException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Deprecated
 @RestController
 public class ProfileController {
 
@@ -73,13 +62,13 @@ public class ProfileController {
         Profile profile = null;
 
         try {
-            profile = fpc.loadProfile(name);
+            profile = (Profile) fpc.loadProfile(name);
         } catch (ProfileNotFoundException e) {
             profile = new Profile();
         }
 
         try {
-            String alias = PartOfSpeech.getPartOfSpeech(pos);
+            PartOfSpeech alias = PartOfSpeech.getPartOfSpeech(pos);
             if (!pos.equals("negating")) {
                 if (alias != null) {
                     for (String word : body.keySet()) {
@@ -87,7 +76,7 @@ public class ProfileController {
                         if (weight instanceof Integer) {
                             weight = ((Integer) body.get(word)).floatValue();
                         }
-                        profile.addEmotion(alias, word.toLowerCase(), (Float) weight);
+                        profile.addEmotion(alias.name(), word.toLowerCase(), (Float) weight);
                     }
                 } else if (pos.equals("booster")) {
                     for (String word : body.keySet()) {
@@ -118,7 +107,7 @@ public class ProfileController {
         }
 
         fpc.saveProfile(name, profile);
-        cache.updateRules(name);
+//        cache.updateRules(name);
         
         return new ResponseEntity<String>(response, httpStatus);
     }
@@ -131,11 +120,11 @@ public class ProfileController {
         Profile profile = null;
 
         try {
-            profile = fpc.loadProfile(name);
-            String alias = PartOfSpeech.getPartOfSpeech(pos);
+            profile = (Profile) fpc.loadProfile(name);
+            PartOfSpeech alias = PartOfSpeech.getPartOfSpeech(pos);
             if (!pos.equals("negating")) {
                 if (alias != null) {
-                    profile.removeEmotion(alias, word);
+                    profile.removeEmotion(alias.name(), word);
                 } else if (pos.equals("booster")) {
                     profile.removeBoosterWord(word);
                 } else if (pos.equals("emoticon")) {
@@ -154,7 +143,7 @@ public class ProfileController {
             response = "{\"error\": \"Invalid postag: " + pos + "\"}";
         }
         fpc.saveProfile(name, profile);
-        cache.updateRules(name);
+//        cache.updateRules(name);
         return new ResponseEntity<String>(response, httpStatus);
     }
 
@@ -166,15 +155,15 @@ public class ProfileController {
         Profile profile = null;
 
         try {
-            profile = fpc.loadProfile(name);
-            String alias = PartOfSpeech.getPartOfSpeech(pos);
+            profile = (Profile) fpc.loadProfile(name);
+            PartOfSpeech alias = PartOfSpeech.getPartOfSpeech(pos);
             List<Map<String, Object>> map = new ArrayList<Map<String, Object>>();
 
             // the only type of word not having weight are negating words
             if (!pos.equals("negating")) {
                 Map<String, Float> values = null;
                 if (alias != null) {
-                    values = profile.getEmotions().get(alias);
+                    values = profile.getEmotions().get(alias.name());
                 } else if (pos.equals("booster")) {
                     values = profile.getBoosters();
                 } else if (pos.equals("emoticon")) {
@@ -213,7 +202,7 @@ public class ProfileController {
 
     @GetMapping("/test/{alias}")
     public ResponseEntity<String> test(@PathVariable String alias) {
-        String test = PartOfSpeech.getPartOfSpeech(alias);
+        String test = "";//PartOfSpeech.getPartOfSpeech(alias);
         return new ResponseEntity<String>(test, HttpStatus.OK);
     }
 }

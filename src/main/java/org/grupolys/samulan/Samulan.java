@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -12,22 +11,15 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.grupolys.nlputils.parser.CoNLLReader;
-import org.grupolys.nlputils.parser.DependencyGraph;
 import org.grupolys.nlputils.parser.DependencyNode;
 import org.grupolys.samulan.analyser.AnalyserConfiguration;
 import org.grupolys.samulan.analyser.RuleBasedAnalyser;
 import org.grupolys.samulan.analyser.SyntacticRuleBasedAnalyser;
-import org.grupolys.samulan.analyser.sentimentjoiner.CompositeSentimentJoiner;
-import org.grupolys.samulan.analyser.sentimentjoiner.MaximumFromBranchSentimentJoiner;
-import org.grupolys.samulan.analyser.sentimentjoiner.NormaliserSentimentJoiner;
-import org.grupolys.samulan.analyser.sentimentjoiner.SentimentJoiner;
 import org.grupolys.samulan.processor.Processor;
 import org.grupolys.samulan.processor.parser.MaltParserWrapper;
 import org.grupolys.samulan.processor.tagger.MaxentStanfordTagger;
@@ -42,7 +34,6 @@ import org.grupolys.samulan.util.exceptions.SentimentJoinerNotFoundException;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sourceforge.argparse4j.ArgumentParsers;
-import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
@@ -514,7 +505,7 @@ public class Samulan {
 			// //rba = new SyntacticRuleBasedAnalyser(new AnalyserConfiguration(),rm,csj);
 			// rba = new SyntacticRuleBasedAnalyser(new AnalyserConfiguration(),rm, csj);
 		} else {
-			rba = new SyntacticRuleBasedAnalyser(configuration, rm);
+			rba = new SyntacticRuleBasedAnalyser(configuration, null);
 		}
 
 		if (parsedCoNLLFileProvided(ns)) {

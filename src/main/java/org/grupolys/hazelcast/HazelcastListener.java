@@ -4,32 +4,34 @@ import com.hazelcast.core.EntryEvent;
 import com.hazelcast.map.listener.EntryAddedListener;
 import com.hazelcast.map.listener.EntryUpdatedListener;
 
-import org.grupolys.profiles.Profile;
+import org.grupolys.dictionary.WordsDictionary;
 import org.grupolys.spring.service.SamulanRulesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class HazelcastListener implements EntryUpdatedListener<String, Profile>, EntryAddedListener<String, Profile> {
+public class HazelcastListener implements
+        EntryUpdatedListener<String, WordsDictionary>,
+        EntryAddedListener<String, WordsDictionary> {
 
     @Autowired
     private SamulanRulesService rulesService;
 
     @Override
-    public void entryAdded(EntryEvent<String, Profile> event) {
+    public void entryAdded(EntryEvent<String, WordsDictionary> event) {
         System.out.println("Handling hazelcast event: Entry Added:" + event);
-        String profileName = event.getKey();
-        Profile profile = event.getValue();
+        String dictionaryId = event.getKey();
+        WordsDictionary dictionary = event.getValue();
 
-        rulesService.loadRulesForProfile(profileName, profile);
+        rulesService.loadRulesForProfile(dictionaryId, dictionary);
     }
 
     @Override
-    public void entryUpdated(EntryEvent<String, Profile> event) {
+    public void entryUpdated(EntryEvent<String, WordsDictionary> event) {
         System.out.println("handling hazelcast event: Entry updated:" + event);
-        String profileName = event.getKey();
-        Profile profile = event.getValue();
+        String dictionaryId = event.getKey();
+        WordsDictionary dictionary = event.getValue();
 
-        rulesService.loadRulesForProfile(profileName, profile);
+        rulesService.loadRulesForProfile(dictionaryId, dictionary);
     }
 }

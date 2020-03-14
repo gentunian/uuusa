@@ -1,5 +1,6 @@
 package org.grupolys.samulan.util.dictionary;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
 
@@ -10,7 +11,7 @@ import java.util.Set;
  *
  * Most advanced refactoring will consist in major and breaking changes.
  */
-public interface Dictionary {
+public interface Dictionary extends Serializable {
 
     /* BEGIN OF GETTERS AND SETTERS SECTION */
     Map<String, Float> getValues();

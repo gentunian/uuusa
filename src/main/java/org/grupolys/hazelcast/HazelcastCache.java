@@ -1,78 +1,107 @@
 package org.grupolys.hazelcast;
 
-import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
-
-import org.grupolys.profiles.Profile;
-import org.grupolys.profiles.ProfileCreator;
-import org.grupolys.profiles.exception.ProfileNotFoundException;
+import org.grupolys.dictionary.DefaultWordsDictionary;
+import org.grupolys.dictionary.DictionaryWord;
+import org.grupolys.dictionary.Word;
+import org.grupolys.dictionary.WordsDictionary;
+import org.grupolys.dictionary.exceptions.InvalidWordException;
+import org.grupolys.profiles.PartOfSpeech;
+import org.grupolys.spring.model.persistence.PersistentWord;
+import org.grupolys.spring.repositories.ProfilesRepository;
+import org.grupolys.spring.repositories.WordsRepository;
 import org.grupolys.spring.service.ConfigService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.List;
+
 @Service
 public class HazelcastCache {
 
+    public static final String PROFILE_DATA = "profileData";
     private final HazelcastInstance hazelcastInstance;
 
-    private final ProfileCreator profileCreator;
+//    private final DictionaryProfileStore profileCreator;
+
+    private final WordsRepository wordsRepository;
+    private final ProfilesRepository profilesRepository;
 
     @Autowired
     HazelcastCache(HazelcastInstance hazelcastInstance,
                    HazelcastListener hzl,
                    ConfigService configService,
-                   ProfileCreator profileCreator) {
-        String directory = ConfigService.UUUSA_PROFILES_PATH; //FilesystemProfileCreator.PROFILES_DIR;
-        IMap<String, Profile> map = hazelcastInstance.getMap("profileData");
+                   WordsRepository wordsRepository,
+                   ProfilesRepository profilesRepository) {
+        IMap<String, WordsDictionary> map = hazelcastInstance.getMap(PROFILE_DATA);
         map.addEntryListener(hzl, true);
-
-//        FilesystemProfileCreator fpc = new FilesystemProfileCreator();
-
-        // FilesystemProfileCreator.PROFILES_DIR;
-        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(Paths.get(directory))) {
-            for (Path path : directoryStream) {
-                String profileName = path.getFileName().toString();
-                if (!map.containsKey(profileName)) {
-                    map.lock(profileName);
-                    try {
-                        Profile profile = profileCreator.loadProfile(profileName);
-                        map.put(profileName, profile);
-                    } catch (ProfileNotFoundException e) {
-                        e.printStackTrace();
-                    } finally {
-                        map.unlock(profileName);
-                    }
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
+        addWords(wordsRepository.findAllFromActiveDictionaries(), map);
         this.hazelcastInstance = hazelcastInstance;
-        this.profileCreator = profileCreator;
-        // RuleBasedAnalyser rba = prepare(fspc.loadProfile(profileName));
-        // Processor processor = prepareProcessor("/opt/uuusa/data/profiles/" +
-        // profileName);
-        // Map<String, RuleBasedAnalyser> rulesPerProfile;
-        // u.set("profile", rba);
+        this.profilesRepository = profilesRepository;
+        this.wordsRepository = wordsRepository;
     }
 
-    public void updateRules(String profileName) {
-//        FilesystemProfileCreator fpc = new FilesystemProfileCreator();
-        IMap<String, Profile> map = hazelcastInstance.getMap("profileData");
-        map.lock(profileName);
-        try {
-            Profile profile = profileCreator.loadProfile(profileName);
-            map.put(profileName, profile);
-        } catch (ProfileNotFoundException e) {
-            e.printStackTrace();
+    private void addWords(List<PersistentWord> words, IMap<String, WordsDictionary> map) {
+        for(PersistentWord word: words) {
+            String dictionaryId = word.getDictionary();
+            WordsDictionary dictionary = map.get(dictionaryId);
+            if (dictionary == null) {
+                dictionary = new DefaultWordsDictionary();
+            }
+            try {
+                addWordToDictionary(word, dictionary);
+                map.lock(dictionaryId);
+                map.put(dictionaryId, dictionary);
+                map.unlock(dictionaryId);
+            } catch (InvalidWordException e) {
+                e.printStackTrace();
+            }
         }
-        map.unlock(profileName);
+    }
+
+    private void addWordToDictionary(PersistentWord word, WordsDictionary dictionary) throws InvalidWordException {
+        PartOfSpeech partOfSpeech = PartOfSpeech.getPartOfSpeech(word.getPartOfSpeech());
+        String lemma = word.getLemma();
+
+        // the lemma should be also a word of this dictionary
+        DictionaryWord dictionaryLemma = dictionary.getWord(lemma);
+
+        // if lemma is not a word of this dictionary then add it
+        if (dictionaryLemma == null && lemma != null) {
+            dictionaryLemma = dictionary.addWord(new Word(lemma, null, 0, partOfSpeech));
+        }
+
+        dictionary.addWord(
+                new Word(word.getWord(),
+                        dictionaryLemma,
+                        word.getValue().floatValue(),
+                        partOfSpeech,
+                        word.getNegating(),
+                        word.getBooster().floatValue()
+                )
+        );
+    }
+
+    public void updateRules(String dictionary) {
+        addWords(wordsRepository.findAllByDictionary(dictionary), hazelcastInstance.getMap(PROFILE_DATA));
+    }
+
+    public void onWordUpdate(PersistentWord word) {
+        addWords(Collections.singletonList(word), hazelcastInstance.getMap(PROFILE_DATA));
+    }
+
+    public void onWordDelete(PersistentWord word) {
+        String dictionaryId = word.getDictionary();
+        IMap<String, WordsDictionary> map = hazelcastInstance.getMap(PROFILE_DATA);
+        WordsDictionary dictionary = map.get(dictionaryId);
+        if (dictionary != null) {
+            PartOfSpeech partOfSpeech = PartOfSpeech.getPartOfSpeech(word.getPartOfSpeech());
+            dictionary.removeWord(word.getWord(), partOfSpeech);
+            map.lock(dictionaryId);
+            map.put(dictionaryId, dictionary);
+            map.unlock(dictionaryId);
+        }
     }
 }

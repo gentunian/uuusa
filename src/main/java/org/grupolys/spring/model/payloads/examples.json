@@ -1,0 +1,73 @@
+{
+  "words": [{
+    "word": "rojo",
+    "partOfSpeech": "noun",
+    "value": 0.0,
+    "booster": false,
+    "negating": false,
+    "lemma": null
+  }, {
+    "word": "rojo",
+    "partOfSpeech": "adj",
+    "value": -1.2,
+    "booster": false,
+    "negating": false,
+    "lemma": null
+  }, {
+    "word": "rojo",
+    "partOfSpeech": null,
+    "value": -1.2,
+    "booster": false,
+    "negating": false,
+    "lemma": null
+  }],
+  "anotherApproach": {
+    "dictionaries": [{
+      "language": "es",
+      "name": "my dictionary",
+      "description": "use this in class",
+      "words": [{
+        "word": "rojo",
+        "value": 0.0,
+        "booster": false,
+        "negating": false,
+        "lemma": null,
+        "partOfSpeech": [{
+          "type": "noun",
+          "value": 1.0
+        }, {
+          "type": "adj",
+          "value": -1.2
+        }]
+      }]
+    }]
+  },
+  "words": [{
+    "word": "rojo",
+    "partOfSpeech": "noun",
+    "value": 0.2,
+    "booster": false,
+    "negating": false,
+    "lemma": null,
+    "dictionary": "foo",
+    "profile": "bar"
+  },{
+    "word": "rojo",
+    "partOfSpeech": "adj",
+    "value": -1.2,
+    "booster": false,
+    "negating": false,
+    "lemma": null,
+    "dictionary": "foo",
+    "profile": "bar"
+  },{
+    "word": "rojizo",
+    "partOfSpeech": "noun",
+    "value": -1.2,
+    "booster": false,
+    "negating": false,
+    "lemma": "rojo",
+    "dictionary": "foo",
+    "profile": "bar"
+  }]
+}

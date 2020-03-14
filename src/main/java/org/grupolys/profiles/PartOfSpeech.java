@@ -1,15 +1,19 @@
 package org.grupolys.profiles;
 
+import org.grupolys.dictionary.WordType;
+
+import javax.servlet.http.Part;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum PartOfSpeech {
+public enum PartOfSpeech implements WordType {
     ADV("ADV", new String[] { "adverbs", "adverb", "adv" }),
     ADJ("ADJ", new String[] { "adjective", "adjectives", "adj" }),
     VERB("VERB", new String[] { "verb", "verbs" }),
-    NOUN("NOUN", new String[] { "noun", "nouns" });
+    NOUN("NOUN", new String[] { "noun", "nouns" }),
+    NOPOSTAG("NOPOSTAG", new String[] {null});
 
     private Map<String, String> partOfSpeech;
 
@@ -21,19 +25,33 @@ public enum PartOfSpeech {
     }
 
     public static PartOfSpeech getPartOfSpeech(String alias) {
-        return alias == null ? null : Arrays.stream(PartOfSpeech.values())
-                .filter(item -> item.getAliasesMap().get(alias.toLowerCase()) != null)
-                .findFirst()
-                .orElse(null);
+        if (alias == null) {
+            return PartOfSpeech.NOPOSTAG;
+        }
 
+        return Arrays.stream(PartOfSpeech.values())
+                .filter(item -> item.isAlias(alias))
+                .findFirst()
+                .orElse(PartOfSpeech.NOPOSTAG);
     }
 
-//    public List<String> getAliases(String partOfSpeech) {
-//        return Collections.unmodifiableList(this.partOfSpeech.get(partOfSpeech));
-//    }
+    public static PartOfSpeech getPartOfSpeech(PartOfSpeech partOfSpeech) {
+        return partOfSpeech == null? PartOfSpeech.NOPOSTAG : partOfSpeech;
+    }
+
+    public boolean isAlias(String alias) {
+        if (alias != null) {
+            alias = alias.toLowerCase();
+        }
+        return this.partOfSpeech.get(alias) != null || this == PartOfSpeech.NOPOSTAG;
+    }
 
     public Map<String, String> getAliasesMap() {
         return Collections.unmodifiableMap(this.partOfSpeech);
     }
 
+    @Override
+    public String getType() {
+        return this.name();
+    }
 }
