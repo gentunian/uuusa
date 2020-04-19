@@ -13,7 +13,7 @@ public class Word implements DictionaryWord, Serializable {
     private final Map<PartOfSpeech, Float> values = new HashMap<>();
     private final Map<PartOfSpeech, DictionaryWord> lemmas = new HashMap<>();
     private String word;
-    private float booster = 1.0f;
+    private double booster = 1.0;
     private boolean negating;
 
     public Word(String word) {
@@ -39,11 +39,11 @@ public class Word implements DictionaryWord, Serializable {
 
     public Word(String word, DictionaryWord lemma, float value, PartOfSpeech partOfSpeech, boolean negating)
             throws IllegalArgumentException {
-        this(word, lemma, value, partOfSpeech, negating, 1f);
+        this(word, lemma, value, partOfSpeech, negating, 1.0);
     }
 
     public Word(String word, DictionaryWord lemma, float value, PartOfSpeech partOfSpeech, boolean negating,
-                float booster) throws IllegalArgumentException {
+                double booster) throws IllegalArgumentException {
         if (word == null || word.equals("")) {
             throw new IllegalArgumentException("word shouldn't be null nor empty.");
         }
@@ -143,17 +143,27 @@ public class Word implements DictionaryWord, Serializable {
     }
 
     @Override
+    public void setNegating(boolean negating) {
+        this.negating = negating;
+    }
+
+    @Override
+    public void setBooster(double booster) {
+        this.booster = booster;
+    }
+
+    @Override
     public boolean isNegating() {
         return this.negating;
     }
 
     @Override
     public boolean isBooster() {
-        return this.booster != 1;
+        return this.booster != 0;
     }
 
     @Override
-    public float getBoosterValue() {
+    public double getBoosterValue() {
         return booster;
     }
 }

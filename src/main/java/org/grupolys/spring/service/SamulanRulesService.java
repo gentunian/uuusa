@@ -6,15 +6,14 @@ import java.util.Map;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
 
-import com.mongodb.client.MongoClient;
+import org.grupolys.dictionary.DefaultDictionary;
 import org.grupolys.dictionary.WordsDictionary;
-import org.grupolys.profiles.DictionaryProfile;
 import org.grupolys.samulan.analyser.AnalyserConfiguration;
 import org.grupolys.samulan.analyser.RuleBasedAnalyser;
 import org.grupolys.samulan.analyser.SyntacticRuleBasedAnalyser;
 import org.grupolys.samulan.rule.RulesManager;
 import org.grupolys.samulan.rule.XmlRulesManager;
-import org.grupolys.samulan.util.dictionary.Dictionary;
+import org.grupolys.samulan.rule.XmlRulesManager2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -35,11 +34,18 @@ public class SamulanRulesService {
         this.configuration = new AnalyserConfiguration();
 
         // HazelcastInstance hz = Hazelcast.getHazelcastInstanceByName(System.getenv("HOSTNAME"));
-        IMap<String, WordsDictionary> map = hz.getMap("profileData");
+        IMap<String, DefaultDictionary> map = hz.getMap("profileData");
 
         for (String profileName : map.keySet()) {
-            loadRulesForProfile(profileName, map.get(profileName));
+            loadRulesForProfile2(profileName, map.get(profileName));
         }
+    }
+
+    public void loadRulesForProfile2(String profileName, DefaultDictionary dictionary) {
+        // TODO: configuration-ES.xml port to mongo
+        RulesManager rm = new XmlRulesManager2(dictionary, configService.UUUSA_PATH + "/config/configuration-ES.xml");
+        rm.setAlwaysShift(configuration.isAlwaysShift());
+        rules.put(profileName, new SyntacticRuleBasedAnalyser(configuration, rm));
     }
 
     public void loadRulesForProfile(String profileName, WordsDictionary dictionary) {

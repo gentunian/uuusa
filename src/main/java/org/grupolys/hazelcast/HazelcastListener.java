@@ -4,6 +4,7 @@ import com.hazelcast.core.EntryEvent;
 import com.hazelcast.map.listener.EntryAddedListener;
 import com.hazelcast.map.listener.EntryUpdatedListener;
 
+import org.grupolys.dictionary.DefaultDictionary;
 import org.grupolys.dictionary.WordsDictionary;
 import org.grupolys.spring.service.SamulanRulesService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,27 +12,29 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class HazelcastListener implements
-        EntryUpdatedListener<String, WordsDictionary>,
-        EntryAddedListener<String, WordsDictionary> {
+        EntryUpdatedListener<String, DefaultDictionary>,
+        EntryAddedListener<String, DefaultDictionary> {
+
+    private final SamulanRulesService rulesService;
 
     @Autowired
-    private SamulanRulesService rulesService;
-
-    @Override
-    public void entryAdded(EntryEvent<String, WordsDictionary> event) {
-        System.out.println("Handling hazelcast event: Entry Added:" + event);
-        String dictionaryId = event.getKey();
-        WordsDictionary dictionary = event.getValue();
-
-        rulesService.loadRulesForProfile(dictionaryId, dictionary);
+    public HazelcastListener(SamulanRulesService rulesService) {
+        this.rulesService = rulesService;
     }
 
     @Override
-    public void entryUpdated(EntryEvent<String, WordsDictionary> event) {
+    public void entryAdded(EntryEvent<String, DefaultDictionary> event) {
+        System.out.println("Handling hazelcast event: Entry Added:" + event);
+        String dictionaryId = event.getKey();
+        DefaultDictionary dictionary = event.getValue();
+        rulesService.loadRulesForProfile2(dictionaryId, dictionary);
+    }
+
+    @Override
+    public void entryUpdated(EntryEvent<String, DefaultDictionary> event) {
         System.out.println("handling hazelcast event: Entry updated:" + event);
         String dictionaryId = event.getKey();
-        WordsDictionary dictionary = event.getValue();
-
-        rulesService.loadRulesForProfile(dictionaryId, dictionary);
+        DefaultDictionary dictionary = event.getValue();
+        rulesService.loadRulesForProfile2(dictionaryId, dictionary);
     }
 }

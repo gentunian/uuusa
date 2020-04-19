@@ -15,7 +15,6 @@ public interface WordsDictionary extends Dictionary {
     DictionaryWord getWord(String word);
     Map<String, DictionaryWord> getWordsByType(WordType type);
     DictionaryWord addWord(DictionaryWord word) throws InvalidWordException;
-    DictionaryWord removeWord(String word, PartOfSpeech partOfSpeech);
     float getWordValue(String word, PartOfSpeech partOfSpeech, boolean includeLemma);
 
     String getLanguage();
@@ -147,8 +146,10 @@ public interface WordsDictionary extends Dictionary {
 
     @Deprecated
     default boolean isWeight(String lemma) {
-        String methodName = new Throwable().getStackTrace()[0].getMethodName();
-        throw new UnsupportedOperationException("Method not supported: You should not call this method:" + methodName);
+        DictionaryWord w = getWord(lemma);
+        return w != null && w.isBooster();
+//        String methodName = new Throwable().getStackTrace()[0].getMethodName();
+//        throw new UnsupportedOperationException("Method not supported: You should not call this method:" + methodName);
     }
 
     @Deprecated

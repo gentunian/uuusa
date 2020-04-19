@@ -57,18 +57,6 @@ public class DictionaryProfileMapper {
         return response;
     }
 
-//    public DictionaryProfileResponse toDictionaryProfileResponse(DictionaryProfile profile) {
-//        if (profile == null) {
-//            return null;
-//        }
-//        DictionaryProfileResponse response = new DictionaryProfileResponse();
-//        response.setDescription(profile.getDescription());
-//        response.setLanguage(profile.getLanguage());
-//        response.setName(profile.getName());
-////        response.setDictionaries(profile.getDictionaries().stream().map(WordsDictionary::getName).toArray(String[]::new));
-//        return response;
-//    }
-
     public DictionaryProfile toDictionaryProfile(DictionaryProfilePayload profilePayload) {
         if (profilePayload == null) {
             return null;
@@ -96,6 +84,7 @@ public class DictionaryProfileMapper {
         return dictionary;
     }
 
+    @Deprecated
     public PersistentWord toPersistentWord(DictionaryWordPayload wordPayload,
                                            String profileName,
                                            String dictionary,
@@ -106,7 +95,7 @@ public class DictionaryProfileMapper {
 
         PersistentWord word = new PersistentWord();
         word.setLemma(wordPayload.getLemma());
-        word.setPartOfSpeech(wordPayload.getPartOfSpeech());
+//        word.setPartOfSpeech(wordPayload.getPartOfSpeech());
         word.setWord(wordPayload.getWord().toLowerCase());
         word.setBooster(wordPayload.getBooster());
         word.setNegating(wordPayload.getNegating());
@@ -117,6 +106,7 @@ public class DictionaryProfileMapper {
         return word;
     }
 
+    @Deprecated
     public List<PersistentWord> toPersistentWord(List<DictionaryWordPayload> wordsPayload,
                                                  String profileName,
                                                  String dictionary,

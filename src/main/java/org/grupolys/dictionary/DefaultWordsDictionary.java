@@ -60,28 +60,11 @@ public class DefaultWordsDictionary implements WordsDictionary, Serializable {
         if (word.isBooster()) {
             addWordToClassifiedWords(existingWord, DefaultWordType.BOOSTER);
         }
-        if (word.isNegating()) {
-            addWordToClassifiedWords(existingWord, DefaultWordType.NEGATING);
-        }
+//        if (word.isNegating()) {
+//            addWordToClassifiedWords(existingWord, DefaultWordType.NEGATING);
+//        }
 
         return existingWord;
-    }
-
-    @Override
-    public DictionaryWord removeWord(String word, PartOfSpeech partOfSpeech) {
-//        DictionaryWord dictionaryWord = getWord(word);
-//        if (dictionaryWord != null) {
-//            dictionaryWord.removeValue(partOfSpeech);
-//            dictionaryWord.removeLemma(partOfSpeech);
-//            if (dictionaryWord.getAllPartOfSpeech().size() == 0) {
-//                words.remove(word);
-//                removeFromClassifiedWords(dictionaryWord, DefaultWordType.BOOSTER);
-//                removeFromClassifiedWords(dictionaryWord, DefaultWordType.NEGATING);
-//                removeFromClassifiedWords(dictionaryWord, partOfSpeech);
-//            }
-//        }
-//        return dictionaryWord;
-        return null;
     }
 
     private void addWordToClassifiedWords(DictionaryWord word, WordType type) {

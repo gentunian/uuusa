@@ -11,7 +11,8 @@ import org.springframework.data.mongodb.repository.Query;
 
 import java.util.List;
 
-public interface WordsRepository extends MongoRepository<PersistentWord, String> {
+@Deprecated
+public interface WordsRepository extends MongoRepository<PersistentWord, String>, UpdateWordsRepository {
 
     @Aggregation({"{ $lookup: { from: 'profiles', localField: 'dictionary', foreignField: 'activeDictionary', as: 'g'}}",
     "{ $match: { 'g': { $size: 1 }}}", "{ $project: { words: 0 }}"})
@@ -29,4 +30,11 @@ public interface WordsRepository extends MongoRepository<PersistentWord, String>
     long countWordsInDictionary(String profileId, String dictionaryId);
 
     List<PersistentWord> findAllByDictionary(String dictionary);
+
+    @Query("{profile: ?0, dictionary: ?1, language: ?2, word: ?3, partOfSpeech: ?4}")
+    PersistentWord findByPrimaryKey(String profile,
+                                          String dictionary,
+                                          String language,
+                                          String word,
+                                          String partOfSpeech);
 }

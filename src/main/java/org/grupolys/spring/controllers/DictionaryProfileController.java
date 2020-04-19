@@ -3,27 +3,19 @@ package org.grupolys.spring.controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.bson.Document;
 import org.grupolys.hazelcast.HazelcastCache;
+import org.grupolys.profiles.PartOfSpeech;
 import org.grupolys.profiles.exception.DictionaryNotFoundException;
-import org.grupolys.samulan.analyser.RuleBasedAnalyser;
-import org.grupolys.samulan.processor.Processor;
 import org.grupolys.spring.model.mappers.DictionaryProfileMapper;
-import org.grupolys.spring.model.payloads.AnalyzePayload;
-import org.grupolys.spring.model.payloads.DictionaryProfilePayload;
-import org.grupolys.spring.model.payloads.ProfileDictionaryPayload;
-import org.grupolys.spring.model.payloads.UpdateProfilePayload;
-import org.grupolys.spring.model.persistence.PersistentAnalysis;
-import org.grupolys.spring.model.persistence.PersistentDictionary;
-import org.grupolys.spring.model.persistence.PersistentDictionaryProfile;
-import org.grupolys.spring.model.persistence.PersistentWord;
+import org.grupolys.spring.model.mappers.WordMapper;
+import org.grupolys.spring.model.payloads.*;
+import org.grupolys.spring.model.persistence.*;
 import org.grupolys.spring.model.responses.DictionaryProfileResponse;
+import org.grupolys.spring.model.responses.ErrorResponse;
 import org.grupolys.spring.repositories.ProfilesRepository;
 import org.grupolys.spring.repositories.SentimentRepository;
-import org.grupolys.spring.repositories.WordsRepository;
+import org.grupolys.spring.repositories.Words2Repository;
 import org.grupolys.spring.service.AnalyzeService;
-import org.grupolys.spring.service.SamulanProcessorService;
-import org.grupolys.spring.service.SamulanRulesService;
 import org.grupolys.spring.validations.IsSupportedLanguage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -31,26 +23,28 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.io.IOException;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
 @Validated
 public class DictionaryProfileController {
+    @Autowired
+    private WordMapper wordMapper;
+
+    @Autowired
+    private Words2Repository words2Repository;
 
     @Autowired
     private HazelcastCache cache;
 
     @Autowired
     private DictionaryProfileMapper mapper;
-
-    @Autowired
-    private WordsRepository wordsRepository;
 
     @Autowired
     private ProfilesRepository profilesRepository;
@@ -103,23 +97,34 @@ public class DictionaryProfileController {
     }
 
     @GetMapping("/words")
-    public ResponseEntity<Page<PersistentWord>> getProfileDictionaryWords(
-            @RequestParam String search,
-            @RequestParam(name = "page") Integer pageNumber,
-            @RequestParam Integer pageSize,
-            @RequestParam(name = "profile") String profileName,
-            @RequestParam String dictionary) {
+    public ResponseEntity<Page<PersistentWord2>> getProfileDictionaryWords(
+            @RequestParam(defaultValue = ".*") String search,
+            @RequestParam(defaultValue = "0", name = "page") Integer pageNumber,
+            @RequestParam(defaultValue = "25") Integer pageSize,
+            @RequestParam(required = false) PartOfSpeech[] partOfSpeech,
+            @RequestParam(required = false) String dictionary) {
         HttpStatus httpStatus = HttpStatus.OK;
         Sort sort = Sort.by("word");
         PageRequest pageRequest = PageRequest.of(pageNumber, pageSize, sort);
-        Page<PersistentWord> page = wordsRepository.findAllByWord(search, profileName, dictionary, pageRequest);
+        Page<PersistentWord2> page = words2Repository
+                .findAllBySearch(search, dictionary, partOfSpeech, pageRequest);
         return new ResponseEntity<>(page, httpStatus);
+    }
+
+    @GetMapping("/words/{id}")
+    public ResponseEntity<PersistentWord2> getWord(@PathVariable String id) {
+        HttpStatus httpStatus = HttpStatus.OK;
+        PersistentWord2 word = words2Repository.findById(id).orElse(null);
+        if (word == null) {
+            httpStatus = HttpStatus.NOT_FOUND;
+        }
+        return new ResponseEntity<>(word, httpStatus);
     }
 
     @PostMapping("/profiles")
     public ResponseEntity<DictionaryProfileResponse> createProfile(
             @Valid @RequestBody DictionaryProfilePayload profilePayload) {
-        HttpStatus httpStatus = HttpStatus.OK;
+        HttpStatus httpStatus;
         DictionaryProfileResponse response = null;
         if (profilesRepository.findByName(profilePayload.getName()) == null) {
             response = mapper.toDictionaryProfileResponse(
@@ -138,16 +143,17 @@ public class DictionaryProfileController {
     public ResponseEntity<String> analyze(
             @PathVariable String profileId,
             @PathVariable String dictionaryId,
-            @RequestParam(defaultValue="false") boolean useCache,
+            @RequestParam(defaultValue = "text") String field,
+            @RequestParam(defaultValue = "false") boolean useCache,
             @RequestBody JsonNode body) throws JsonProcessingException {
         HttpStatus httpStatus = HttpStatus.OK;
         String response = null;
-        AnalyzePayload payload = objectMapper.treeToValue(body, AnalyzePayload.class);
+//        AnalyzePayload payload = objectMapper.treeToValue(body, AnalyzePayload.class);
         if (useCache) {
 
         } else {
             try {
-                PersistentAnalysis analysis = analyzeService.analyze(profileId, dictionaryId, payload.getText());
+                PersistentAnalysis analysis = analyzeService.analyze(profileId, dictionaryId, body.get(field).asText());
                 response = objectMapper.writeValueAsString(sentimentRepository.save(analysis));
             } catch (DictionaryNotFoundException e) {
                 httpStatus = HttpStatus.NOT_FOUND;
@@ -166,43 +172,54 @@ public class DictionaryProfileController {
         PersistentDictionaryProfile profile = profilesRepository.findById(profileId).orElse(null);
         if (profile == null) {
             httpStatus = HttpStatus.NOT_FOUND;
+        } else if (profile.getDictionaries().stream()
+                .filter(d -> d.getName().equals(dictionaryPayload.getName())).findAny().orElse(null) != null) {
+            httpStatus = HttpStatus.CONFLICT;
         } else {
             PersistentDictionary dictionary = mapper.toPersistentDictionary(dictionaryPayload);
-            boolean isDefault = profile.getDictionaries().size() == 0;
-            if (isDefault) {
+            // if there's no other dict, set this dictionary as the active directory
+            if (profile.getDictionaries().size() == 0) {
                 profile.setActiveDictionary(dictionary.getId());
-            } else {
-                profile.getDictionaries().removeIf(d -> d.getName().equals(dictionaryPayload.getName()));
             }
             profile.getDictionaries().add(dictionary);
-            // Update words language
-            List<PersistentWord> words = wordsRepository
-                    .findByProfileAndDictionary(profile.getName(), dictionaryPayload.getName());
-            for(PersistentWord word : words) {
-                word.setLanguage(dictionaryPayload.getLanguage());
-            }
-            wordsRepository.saveAll(words);
             profilesRepository.save(profile);
+            cache.onDictionaryCreated2(dictionary.getId());
             response = dictionary;
         }
         return new ResponseEntity<>(response, httpStatus);
     }
 
     @PostMapping("/words")
-    public ResponseEntity<PersistentWord> populateDictionaryForProfile(
-            @Valid @RequestBody JsonNode jsonNode) throws JsonProcessingException {
+    public ResponseEntity<JsonNode> postWord(
+            @Valid @RequestBody PostWordPayload payload) {
         HttpStatus httpStatus = HttpStatus.OK;
-        PersistentWord response = null;
-        PersistentWord wordPayload = objectMapper.treeToValue(jsonNode, PersistentWord.class);
+        JsonNode response;
         PersistentDictionaryProfile profile = profilesRepository
-                .findByProfileAndDictionary(wordPayload.getProfile(), wordPayload.getDictionary());
-        if (profile == null || profile.getDictionaries().size() == 0) {
+                .findByProfileAndDictionary(payload.getProfile(), payload.getDictionary());
+        PersistentWord2 existingWord = words2Repository.findByWord(payload.getWord());
+        // Check for profile with dictionary existence
+        if (profile == null) {
             httpStatus = HttpStatus.NOT_FOUND;
+            response = objectMapper.valueToTree(
+                    new ErrorResponse("Profile not found.")
+            );
+        } else if (profile.getDictionaries().size() == 0) {
+            httpStatus = HttpStatus.BAD_REQUEST;
+            response = objectMapper.valueToTree(
+                    new ErrorResponse("Profile does not have any dictionaries yet.")
+            );
+        } else if (existingWord != null) {
+            httpStatus = HttpStatus.CONFLICT;
+            response = objectMapper.valueToTree(
+                    new ErrorResponse("Word already exists.", "/words/" + existingWord.getId())
+            );
         } else {
-            wordPayload.setLanguage(profile.getLanguage());
-            response = wordsRepository.save(wordPayload);
-            cache.updateRules(wordPayload.getDictionary());
+            PersistentWord2 word = wordMapper.toPersistentWord2(payload);
+            word = words2Repository.save(word);
+            cache.onWordAdded2(word);
+            response = objectMapper.valueToTree(word);
         }
+
         return new ResponseEntity<>(response, httpStatus);
     }
 
@@ -233,39 +250,78 @@ public class DictionaryProfileController {
     }
 
     @PutMapping("/words/{id}")
-    public ResponseEntity<PersistentWord> updateWord(
+    public ResponseEntity<JsonNode> putWord(
             @PathVariable String id,
-            @RequestBody JsonNode word) {
+            @RequestBody @Valid PersistentWord2 payload) {
         HttpStatus httpStatus = HttpStatus.OK;
-        PersistentWord response = wordsRepository.findById(id).orElse(null);
-        if (response == null) {
+        JsonNode response = null;
+        PersistentWord2 word = words2Repository.findById(id).orElse(null);
+        if (word == null) {
             httpStatus = HttpStatus.NOT_FOUND;
+            response = objectMapper.valueToTree(new ErrorResponse("Word not found"));
+        } else if (!word.getDictionary().equals(payload.getDictionary())) {
+            httpStatus = HttpStatus.BAD_REQUEST;
+            response = objectMapper.valueToTree(
+                    new ErrorResponse("You can't move word to another dictionary. " +
+                            "Word belongs to dictionary '" + word.getDictionary() + "'")
+            );
+        } else if (!word.getProfile().equals(payload.getProfile())) {
+            httpStatus = HttpStatus.BAD_REQUEST;
+            response = objectMapper.valueToTree(
+                    new ErrorResponse("You can't move word to another profile. " +
+                            "Word belongs to profile '" + word.getProfile() + "'")
+            );
+        } else if (!word.getLanguage().equals(payload.getLanguage())) {
+            httpStatus = HttpStatus.BAD_REQUEST;
+            response = objectMapper.valueToTree(
+                    new ErrorResponse("You can't change word language. This is managed by the dictionary")
+            );
+        } else if (!word.getWord().equals(payload.getWord())) {
+            httpStatus = HttpStatus.BAD_REQUEST;
+            response = objectMapper.valueToTree(new ErrorResponse("You can't change the word. " +
+                    "Word '" + payload.getWord() + "' is not valid."));
         } else {
-            try {
-                response = objectMapper.readerForUpdating(response).readValue(word);
-                wordsRepository.save(response);
-//                cache.updateRules(response.getDictionary());
-                cache.onWordUpdate(response);
-            } catch (IOException e) {
-                e.printStackTrace();
-                httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            if (!words2Repository.findAllWordsByLemmas(payload.getDictionary(), payload.getPartOfSpeech()).isEmpty()) {
+                httpStatus = HttpStatus.BAD_REQUEST;
+                response = objectMapper.valueToTree(
+                        new ErrorResponse("Provided lemma(s) doesn't exist in dictionary: '" +
+                                payload.getDictionary() + "'.")
+                );
+            } else {
+                payload.setId(word.getId());
+                payload.setLanguage(word.getLanguage());
+                response = objectMapper.valueToTree(words2Repository.save(payload));
+                cache.onWordUpdated2(payload);
             }
         }
         return new ResponseEntity<>(response, httpStatus);
     }
 
-    @DeleteMapping("/words/{id}")
-    public ResponseEntity<PersistentWord> deleteWord(@PathVariable String id) {
+    @PatchMapping("/words/{id}")
+    public ResponseEntity<JsonNode> patchWord(
+            @PathVariable String id,
+            @Valid @RequestBody PatchWordPayload payload) {
         HttpStatus httpStatus = HttpStatus.OK;
-        PersistentWord response = wordsRepository.findById(id).orElse(null);
-        if (response == null) {
+        JsonNode response = null;
+        PersistentWord2 word = words2Repository.findById(id).orElse(null);
+        if (word == null) {
             httpStatus = HttpStatus.NOT_FOUND;
+            response = objectMapper.valueToTree(
+                    new ErrorResponse("Word not found.")
+            );
         } else {
-            wordsRepository.deleteById(id);
+            word = wordMapper.toPersistentWord2(word, payload);
+            response = objectMapper.valueToTree(word);
+            cache.onWordUpdated2(words2Repository.save(word));
         }
         return new ResponseEntity<>(response, httpStatus);
     }
 
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public void handle(HttpMessageNotReadableException e) {
+        e.printStackTrace();
+    }
 
     @PostMapping("/profiles/testme")
     public ResponseEntity<String> postTest(@RequestBody @Valid DictionaryProfileResponse profile) {

@@ -69,9 +69,13 @@ public interface DictionaryWord {
 
     Set<PartOfSpeech> getAllPartOfSpeech();
 
+    void setNegating(boolean negating);
+
+    void setBooster(double booster);
+
     boolean isNegating();
 
     boolean isBooster();
 
-    float getBoosterValue();
+    double getBoosterValue();
 }

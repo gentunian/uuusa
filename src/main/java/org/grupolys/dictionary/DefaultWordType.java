@@ -2,7 +2,6 @@ package org.grupolys.dictionary;
 
 public enum DefaultWordType implements WordType {
     BOOSTER("booster"),
-    NEGATING("negating"),
     EMOTICON("emoticon");
 
     private String type;

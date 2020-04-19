@@ -1,20 +1,18 @@
 package org.grupolys.samulan.rule;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.grupolys.dictionary.DefaultDictionary;
 import org.grupolys.dictionary.DefaultWordType;
-import org.grupolys.dictionary.Word;
-import org.grupolys.dictionary.WordsDictionary;
 import org.grupolys.samulan.analyser.operation.*;
-import org.grupolys.samulan.util.dictionary.Dictionary;
 import org.grupolys.samulan.util.SentimentDependencyGraph;
 import org.grupolys.samulan.util.SentimentDependencyNode;
 import org.grupolys.samulan.util.SentimentInformation;
+import org.grupolys.samulan.util.dictionary.Dictionary;
 import org.grupolys.samulan.util.exceptions.OperationNotFoundException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import scala.io.BytePickle;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -29,7 +27,7 @@ import java.util.regex.Pattern;
  *
  * @author David Vilares
  */
-public class XmlRulesManager implements RulesManager {
+public class XmlRulesManager2 implements RulesManager {
 
     //XML fields
     public static final String OPERATION_FIELD = "operation";
@@ -57,12 +55,12 @@ public class XmlRulesManager implements RulesManager {
 
 
     private List<Rule> rules;
-    private WordsDictionary dictionary;
+    private DefaultDictionary dictionary;
     private boolean alwaysShift = true;
     private Pattern alphaNumericPattern = Pattern.compile("^[\\-'a-zA-Z0-9]");
     private Pattern nonAlphaNumericPattern = Pattern.compile("[^.+]");
 
-    public XmlRulesManager(WordsDictionary dictionary, String rulesPath) {
+    public XmlRulesManager2(DefaultDictionary dictionary, String rulesPath) {
         this.rules = new ArrayList<>();
         this.dictionary = dictionary;
         this.rules.add(new Rule());
@@ -81,8 +79,7 @@ public class XmlRulesManager implements RulesManager {
         this.rules.add(0, r);
     }
 
-
-    public Dictionary getDictionary() {
+    public DefaultDictionary getDictionary() {
         return dictionary;
     }
 
@@ -259,7 +256,7 @@ public class XmlRulesManager implements RulesManager {
         if (parameters[0].equals(SENTIDATA)) {
             // getValue(Operation.WEIGHT) refers to booster words.
 //            weightingValue = dictionary.getValue(Operation.WEIGHT, form, true);
-            weightingValue = (float) dictionary.getWord(form).getBoosterValue();
+            weightingValue = (float) dictionary.getBoosterValue(form);
         } else {
             weightingValue = Float.parseFloat(parameters[0]);
         }
@@ -340,9 +337,9 @@ public class XmlRulesManager implements RulesManager {
                     if (forms.contains(SENTIDATA_BOOSTER)) {
                         if (forms.size() == 1) {
                             //System.out.println("getClassValues: "+this.d.getClassValues());
-                            Map<String, ?> boosterWords = dictionary.getWordsByType(DefaultWordType.BOOSTER);
+                            Set<String> boosterWords = dictionary.getBoosterWords();
                             if (boosterWords != null) {
-                                addRules(fstElement, boosterWords.keySet(), postags, dependencies, levelsup, priority,
+                                addRules(fstElement, boosterWords, postags, dependencies, levelsup, priority,
                                         validHead);
                             }
                         } else {
@@ -353,12 +350,12 @@ public class XmlRulesManager implements RulesManager {
                     //NEGATION RULES WITH SENTIDATA
                     else if (forms.contains(SENTIDATA_NEGATION)) {
                         if (forms.size() == 1) {
-//                            Map<String, ?> negatingWords = dictionary.getWordsByType(DefaultWordType.NEGATING);
-//                            if (negatingWords != null) {
-//                                addRules(fstElement, negatingWords.keySet(),
-//                                        postags, dependencies, levelsup, priority,
-//                                        validHead);
-//                            }
+                            Set<String> negatingWords = dictionary.getNegatingWords();
+                            if (negatingWords != null) {
+                                addRules(fstElement, negatingWords,
+                                        postags, dependencies, levelsup, priority,
+                                        validHead);
+                            }
                         } else {
                             System.err.println("We cannot handle this kind of rules " + forms);
                         }
@@ -368,7 +365,7 @@ public class XmlRulesManager implements RulesManager {
                     else {
                         forms.remove("*"); //TODO process regex
                         if (forms.contains(SENTIDATA_ADVERSATIVE)) {
-                            forms.addAll(this.dictionary.getAdversativeWords());
+                            //forms.addAll(this.dictionary.getAdversativeWords());
                         }
                         //System.out.println(forms+" "+priority);
                         addRules(fstElement, forms,

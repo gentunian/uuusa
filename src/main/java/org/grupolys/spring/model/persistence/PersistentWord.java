@@ -2,27 +2,30 @@ package org.grupolys.spring.model.persistence;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.springframework.data.annotation.*;
+import org.grupolys.profiles.PartOfSpeech;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.TextIndexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Null;
 
 @EqualsAndHashCode(callSuper = true)
 @Document(collection = "words")
 @Data
+@Deprecated
 public class PersistentWord extends PersistentAudit {
     @Id private String id;
+    @NotBlank
     private String profile;
+    @NotBlank
     private String dictionary;
-    private String language;
+    private String language = "ES"; // TODO: make a default language machinery
     @TextIndexed(weight = 2) private String word;
     private Double value = 0.0;
-    private String partOfSpeech;
+    private PartOfSpeech partOfSpeech = PartOfSpeech.NOPOSTAG;
     private String lemma;
-    private Double booster = 1.0;
-    private Boolean negating = Boolean.FALSE;
+    private Double booster;
+    private Boolean negating;
 
     public void setLemma(String lemma) {
         if (lemma != null && lemma.equals("")) {
