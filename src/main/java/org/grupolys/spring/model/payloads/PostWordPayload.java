@@ -1,6 +1,7 @@
 package org.grupolys.spring.model.payloads;
 
 import lombok.Data;
+import org.grupolys.spring.validations.NoSpaces;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -8,6 +9,7 @@ import javax.validation.constraints.NotNull;
 @Data
 public class PostWordPayload {
     @NotEmpty(message = "'word' cannot be null or empty.")
+    @NoSpaces(message = "word can't contain spaces.")
     String word;
 
     @NotNull(message = "'dictionary' cannot be null.")
@@ -18,12 +20,12 @@ public class PostWordPayload {
 
     Boolean negating = Boolean.FALSE;
 
-    Boolean emoticon = Boolean.FALSE;
+    Double emoticon = 0.0;
 
     Double booster = 0.0;
 
-    public void setEmoticon(Boolean value) {
-        this.emoticon = (value != null) ? value : false;
+    public void setEmoticon(Double value) {
+        this.emoticon = (value != null) ? value : 0.0;
     }
 
     public void setNegating(Boolean value) {
@@ -31,6 +33,6 @@ public class PostWordPayload {
     }
 
     public void setBooster(Double value) {
-        this.booster = (value != null) ? value : 1.0;
+        this.booster = (value != null) ? value : 0.0;
     }
 }

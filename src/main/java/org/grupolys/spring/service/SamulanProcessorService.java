@@ -15,10 +15,10 @@ public class SamulanProcessorService {
     private Processor processor = null;
 
     @Autowired
-    SamulanProcessorService(ConfigService configService) {
+    public SamulanProcessorService() {
         ARKTwokenizer arktokenizer = new ARKTwokenizer();
 
-        String taggerDir = configService.UUUSA_TAGGERS_PATH; // "/opt/uuusa/data/taggers";
+        String taggerDir = ConfigService.UUUSA_TAGGERS_PATH; // "/opt/uuusa/data/taggers";
 
         File folderSentiData = new File(taggerDir);
         File[] files = folderSentiData.listFiles();
@@ -38,7 +38,7 @@ public class SamulanProcessorService {
         } else {
             // builds the tagger
             MaxentStanfordTagger tagger = new MaxentStanfordTagger(pathStanfordTagger);
-            String parserDir = configService.UUUSA_PARSERS_PATH + "/0"; // "/opt/uuusa/data/parsers/0";
+            String parserDir = ConfigService.UUUSA_PARSERS_PATH + "/0"; // "/opt/uuusa/data/parsers/0";
             MaltParserWrapper parser = new MaltParserWrapper(parserDir);
             processor = new Processor(arktokenizer, tagger, parser);
         }

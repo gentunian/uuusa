@@ -1,6 +1,7 @@
 package org.grupolys.spring.model.persistence;
 
 import lombok.Data;
+import org.grupolys.samulan.util.PersistentSIGraph;
 import org.springframework.data.annotation.Id;
 
 import java.util.List;
@@ -15,6 +16,6 @@ public class PersistentAnalysis {
     private float sentimentWeight;
     private String profile;
     private String dictionary;
-    private List<Map<String, Object>> analysisTree;
+    private List<PersistentSIGraph> analysisTree;
 
 }

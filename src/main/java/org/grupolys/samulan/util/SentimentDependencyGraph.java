@@ -68,7 +68,7 @@ public class SentimentDependencyGraph extends DependencyGraph {
 			id = Short.parseShort(columns[0]);
 			head = Short.parseShort(columns[6]);
 			
-			existentDependents = new ArrayList<Short>();				
+			existentDependents = new ArrayList<>();
 			if (nodes.containsKey(id)){
 				existentDependents =nodes.get(id).getDependents();
 			}	
@@ -81,10 +81,10 @@ public class SentimentDependencyGraph extends DependencyGraph {
 				if (head == DependencyNode.ROOT_ADDRESS)
 					node = new DependencyNode(head, DependencyNode.ROOT_WORD,
 							null, DependencyNode.ROOT_POSTAG,DependencyNode.ROOT_POSTAG,
-							null, null,new ArrayList<Short>());
+							null, null, new ArrayList<>());
 				
 
-				else node =  new DependencyNode(new ArrayList<Short>()); 
+				else node =  new DependencyNode(new ArrayList<>());
 
 				nodes.put(head, new SentimentDependencyNode(node,null));
 			}
@@ -107,11 +107,11 @@ public class SentimentDependencyGraph extends DependencyGraph {
 		
 		SentimentDependencyNode sdn = (SentimentDependencyNode) this.nodes.get(address);
 		if (sdn.isLeaf()){
-			return new TreeNode( sdn.toString(), new ArrayList<TreeNode>());
+			return new TreeNode( sdn.toString(), new ArrayList<>());
 //			return new TreeNode( sdn.toString().concat(sdn.getSi() != null ? sdn.getSi().getType() : ""), new ArrayList<TreeNode>());
 		}
 		else{
-			List<TreeNode> childrenTreeNode = new ArrayList<TreeNode>();
+			List<TreeNode> childrenTreeNode = new ArrayList<>();
 			
 //			String text = sdn.toString().concat(sdn.getSi() != null ? sdn.getSi().getType() : "");
 			String text = sdn.toString();
@@ -147,8 +147,8 @@ public class SentimentDependencyGraph extends DependencyGraph {
 		innerNode.put(POSTAG, sdn.getPostag());
 		innerNode.put(SEMANTIC_ORIENTATION, so);
 		innerNode.put(DEPENDENCY_TYPE, sdn.getDeprel());
-		innerNode.put(IS_NEGATION, sdn.getSi() == null ? false : sdn.getSi().getType().equals(Operation.SHIFT));
-		innerNode.put(IS_INTENSIFIER,  sdn.getSi() == null ? false : sdn.getSi().getType().equals(Operation.WEIGHT));
+		innerNode.put(IS_NEGATION, sdn.getSi() != null && sdn.getSi().getType().equals(Operation.SHIFT));
+		innerNode.put(IS_INTENSIFIER, sdn.getSi() != null && sdn.getSi().getType().equals(Operation.WEIGHT));
 		innerNode.put(WORD, sdn.getWord());
 		innerNode.put(CHILDREN, false);
 		
@@ -170,17 +170,15 @@ public class SentimentDependencyGraph extends DependencyGraph {
 		
 		String rawRepresentation = "";
 		SentimentDependencyNode  sdn = (SentimentDependencyNode) this.nodes.get(address);
-		float so, pos, neg;
+		float pos, neg;
 		String operationExplained = "";
 		
 		if (sdn.getSi() == null) {
-			so = 0;
 			pos = SentimentInformation.SENTISTRENGTH_NEUTRAL;
 			neg = SentimentInformation.SENTISTRENGTH_NEUTRAL;
 			
 		}
 		else {
-			so = sdn.getSi().getSemanticOrientation();
 			pos = sdn.getSi().getPositiveSentiment();
 			neg = sdn.getSi().getNegativeSentiment();
 			operationExplained = "{"+sdn.getSi().getOperationExplanation()+"} ";
@@ -212,7 +210,7 @@ public class SentimentDependencyGraph extends DependencyGraph {
 			float so = ((SentimentDependencyNode) this.nodes.get(id)).getSi() != null
 					? ((SentimentDependencyNode) this.nodes.get(id)).getSi().getSemanticOrientation()
 					: 0;
-			rawGraph += String.valueOf(id) + ":(" + this.nodes.get(id) + "["
+			rawGraph += id + ":(" + this.nodes.get(id) + "["
 					+ ((SentimentDependencyNode) this.nodes.get(id)).getSi() + "]" + ")\n";
 		}
 		return rawGraph;
@@ -222,9 +220,9 @@ public class SentimentDependencyGraph extends DependencyGraph {
 
 		SentimentDependencyNode sdn = this.getNode((short) address);
 
-		List<Map<String, Object>> childrenArray = new ArrayList<Map<String, Object>>();
+		List<Map<String, Object>> childrenArray = new ArrayList<>();
 		// JSONArray outerArray = new JSONArray();
-		Map<String, Object> map = new HashMap<String, Object>();
+		Map<String, Object> map = new HashMap<>();
 
 		SentimentInformation si = sdn.getSi();
 		String operationExplained = "";
@@ -234,13 +232,12 @@ public class SentimentDependencyGraph extends DependencyGraph {
 			operationExplained = si.getOperationExplanation();
 		}
 		// float so = sdn.getSi() == null ? 0 : sdn.getSi().getSemanticOrientation();
-		sdn.getSi().getOperationExplanation();
 		map.put(ADDRESS, address);
 		map.put(POSTAG, sdn.getPostag());
 		map.put(SEMANTIC_ORIENTATION, so);
 		map.put(DEPENDENCY_TYPE, sdn.getDeprel());
-		map.put(IS_NEGATION, sdn.getSi() == null ? false : sdn.getSi().getType().equals(Operation.SHIFT));
-		map.put(IS_INTENSIFIER, sdn.getSi() == null ? false : sdn.getSi().getType().equals(Operation.WEIGHT));
+		map.put(IS_NEGATION, sdn.getSi() != null && sdn.getSi().getType().equals(Operation.SHIFT));
+		map.put(IS_INTENSIFIER, sdn.getSi() != null && sdn.getSi().getType().equals(Operation.WEIGHT));
 		map.put(WORD, sdn.getWord());
 		map.put(CHILDREN, false);
 		map.put("operationExplained", operationExplained);
@@ -251,10 +248,43 @@ public class SentimentDependencyGraph extends DependencyGraph {
 			for (Short child : sdn.getDependents()) {
 				childrenArray.add(this.toMap(child));
 			}
-		
+
 			map.put(CHILDREN, childrenArray);
 			return map;
 		}
+	}
+
+	public PersistentSIGraph toPersistentSIGraph(int address) {
+		SentimentDependencyNode sdn = this.getNode((short) address);
+		PersistentSIGraph persistentSIGraph = new PersistentSIGraph();
+		List<PersistentSIGraph> childrenArray = new ArrayList<>();
+
+		SentimentInformation si = sdn.getSi();
+		String operationExplained = "";
+		float so = 0;
+		if (si != null) {
+			so = si.getSemanticOrientation();
+			operationExplained = si.getOperationExplanation();
+		}
+		persistentSIGraph.setAddress(address);
+		persistentSIGraph.setPostag(sdn.getPostag());
+		persistentSIGraph.setSo(so);
+		persistentSIGraph.setGetDependency_type(sdn.getDeprel());
+		persistentSIGraph.set_negation(sdn.getSi() != null && sdn.getSi().getType().equals(Operation.SHIFT));
+		persistentSIGraph.set_intensifier(sdn.getSi() != null && sdn.getSi().getType().equals(Operation.WEIGHT));
+		persistentSIGraph.setWord(sdn.getWord());
+		persistentSIGraph.setChildren(null);
+		persistentSIGraph.setOperationExplained(operationExplained);
+		persistentSIGraph.setWeight(sdn.getWordWeight());
+
+		if (!sdn.isLeaf()) {
+			for (Short child : sdn.getDependents()) {
+				childrenArray.add(toPersistentSIGraph(child));
+			}
+
+			persistentSIGraph.setChildren(childrenArray);
+		}
+		return persistentSIGraph;
 	}
 
 }

@@ -3,6 +3,7 @@ package org.grupolys.spring.service;
 import org.grupolys.profiles.exception.DictionaryNotFoundException;
 import org.grupolys.samulan.analyser.RuleBasedAnalyser;
 import org.grupolys.samulan.processor.Processor;
+import org.grupolys.samulan.util.PersistentSIGraph;
 import org.grupolys.samulan.util.SentimentDependencyGraph;
 import org.grupolys.samulan.util.SentimentInformation;
 import org.grupolys.spring.model.persistence.PersistentAnalysis;
@@ -41,7 +42,7 @@ public class AnalyzeService {
                 .map((SentimentDependencyGraph dg) -> (rba.analyse(dg, (short) 0))).collect(Collectors.toList());
 
         SentimentInformation si = rba.merge(sis);
-        String sentiment = "";
+        String sentiment;
 
         // Taken from Samulan.analyse method, please double check why not pos >= neg
         if (si.getPositiveSentiment() > si.getNegativeSentiment()
@@ -55,18 +56,18 @@ public class AnalyzeService {
 
 //        Map<String, Object> map = new HashMap<>();
         PersistentAnalysis analysis = new PersistentAnalysis();
-        List<Map<String, Object>> sentiAnalysisTree = new ArrayList<>();
+        List<PersistentSIGraph> sentiAnalysisTree = new ArrayList<>();
 
-        sdgs.stream().forEach(sdg -> {
-            Map<String, Object> sdgMap = sdg.toMap((short) 0);
-            sentiAnalysisTree.add(sdgMap);
+        sdgs.forEach(sdg -> {
+            PersistentSIGraph graph = sdg.toPersistentSIGraph((short) 0);
+            sentiAnalysisTree.add(graph);
         });
         analysis.setText(text);
         analysis.setSentiment(sentiment);
         analysis.setAnalysisTree(sentiAnalysisTree);
         analysis.setDictionary(dictionaryId);
         analysis.setProfile(profileId);
-        analysis.setSentimentWeight((float) sentiAnalysisTree.get(0).get("so"));
+        analysis.setSentimentWeight(sentiAnalysisTree.get(0).getSo());
 
         return analysis;
     }

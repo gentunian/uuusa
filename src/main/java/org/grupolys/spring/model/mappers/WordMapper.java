@@ -3,7 +3,7 @@ package org.grupolys.spring.model.mappers;
 import org.grupolys.profiles.PartOfSpeech;
 import org.grupolys.spring.model.payloads.PostWordPayload;
 import org.grupolys.spring.model.payloads.PatchWordPayload;
-import org.grupolys.spring.model.persistence.PersistentWord2;
+import org.grupolys.spring.model.persistence.PersistentWord;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -12,10 +12,10 @@ import java.util.Map;
 @Service
 public class WordMapper {
 
-    public PersistentWord2 toPersistentWord2(PostWordPayload payload) {
-        PersistentWord2 word = null;
+    public PersistentWord toPersistentWord2(PostWordPayload payload) {
+        PersistentWord word = null;
         if (payload != null) {
-            word = new PersistentWord2();
+            word = new PersistentWord();
             word.setDictionary(payload.getDictionary());
             word.setProfile(payload.getProfile());
             word.setWord(payload.getWord());
@@ -26,10 +26,10 @@ public class WordMapper {
         return word;
     }
 
-    public PersistentWord2 toPersistentWord2(PersistentWord2 response, PatchWordPayload payload) {
-        PersistentWord2 word = null;
+    public PersistentWord toPersistentWord2(PersistentWord response, PatchWordPayload payload) {
+        PersistentWord word = null;
         if (payload != null) {
-            word = new PersistentWord2();
+            word = new PersistentWord();
             word.setId(response.getId());
             word.setDictionary(response.getDictionary());
             word.setProfile(response.getProfile());

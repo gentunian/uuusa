@@ -112,27 +112,6 @@ public class DefaultDictionary implements Dictionary, Serializable {
     }
 
     @Override
-    public void addWordsValues(WordsValues values) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void addLemmasValues(LemmasValues values) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void addClassValues(ClassValues values) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void addClassLemmasValues(ClassLemmasValues values) {
-        throw new NotImplementedException();
-    }
-
-
-    @Override
     public void setClassEmotionDict(boolean classEmotionDict) {
         throw new NotImplementedException();
     }

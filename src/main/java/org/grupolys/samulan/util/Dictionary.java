@@ -1,26 +1,9 @@
 package org.grupolys.samulan.util;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-
 import org.grupolys.samulan.analyser.operation.Operation;
-import org.grupolys.samulan.util.dictionary.ClassLemmasValues;
-import org.grupolys.samulan.util.dictionary.ClassValues;
-import org.grupolys.samulan.util.dictionary.LemmasValues;
-import org.grupolys.samulan.util.dictionary.WordsValues;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
+import java.io.*;
+import java.util.*;
 
 @Deprecated
 public class Dictionary implements org.grupolys.samulan.util.dictionary.Dictionary {
@@ -259,7 +242,7 @@ public class Dictionary implements org.grupolys.samulan.util.dictionary.Dictiona
                                 if (this.classValues.containsKey(classValue))
                                     this.classValues.get(classValue).put(word, so);
                                 else {
-                                    Map<String, Float> aux = new HashMap<String, Float>();
+                                    Map<String, Float> aux = new HashMap<>();
                                     aux.put(word, so);
                                     this.classValues.put(classValue, aux);
                                 }
@@ -295,7 +278,7 @@ public class Dictionary implements org.grupolys.samulan.util.dictionary.Dictiona
 							String postag = ls[0];
 							String word = ls[1];
 							String lemma = ls[2];	
-							Map<String, String> aux = new HashMap<String, String>();
+							Map<String, String> aux = new HashMap<>();
 							if (this.classLemmas.containsKey(postag)) {
 								this.classLemmas.get(postag).put(word, lemma);
 							} else {
@@ -355,7 +338,7 @@ public class Dictionary implements org.grupolys.samulan.util.dictionary.Dictiona
 					String[] ls = line.split("\t");
 					if (ls.length == 2) {
 						String emoticon = ls[0];
-						ArrayList<String> strippers = new ArrayList<String>(Arrays.asList(ls[1].split(",")));
+						ArrayList<String> strippers = new ArrayList<>(Arrays.asList(ls[1].split(",")));
 						this.lemmasStrippers.put(emoticon, strippers);
 					} else {
 						System.err.println("Non standard number of columns on Emoticon_list file");
@@ -444,23 +427,16 @@ public class Dictionary implements org.grupolys.samulan.util.dictionary.Dictiona
 	}
 
 	@Override
-	public void addWordsValues(WordsValues values) {
-		throw new NotImplementedException();
+	public Set<String> getBoosterWords() {
+		return this.classValues.get(Operation.WEIGHT).keySet();
 	}
 
 	@Override
-	public void addLemmasValues(LemmasValues values) {
-		throw new NotImplementedException();
-	}
-
-	@Override
-	public void addClassValues(ClassValues values) {
-		throw new NotImplementedException();
-	}
-
-	@Override
-	public void addClassLemmasValues(ClassLemmasValues values) {
-		throw new NotImplementedException();
+	public float getBoosterValue(String word) {
+		if (this.classValues.get(Operation.WEIGHT).get(word) != null) {
+			return this.classValues.get(Operation.WEIGHT).get(word);
+		}
+		return 0;
 	}
 
 	/**
@@ -541,8 +517,8 @@ public class Dictionary implements org.grupolys.samulan.util.dictionary.Dictiona
 	 * that represent suffixes
 	 * 
 	 * @param postag Part-of-speech tag of the word
-	 * @param word
-	 * @return
+	 * @param word a word
+	 * @return a string
 	 */
 	public String getStrippedLemma(String postag, String word) {
 		String wordLowerCase = word.toLowerCase();
@@ -582,11 +558,6 @@ public class Dictionary implements org.grupolys.samulan.util.dictionary.Dictiona
 	}
 	
 	public void addPostagHashMapValues(String operation, Map<String, Float> values) {
-		/**
-		 * @param postag
-		 * @param values
-		 *
-		 */
 		if (!operation.equals(Operation.WEIGHT)) {
 			this.thereIsClassEmotionDict = true;
 		}
@@ -594,10 +565,6 @@ public class Dictionary implements org.grupolys.samulan.util.dictionary.Dictiona
 	}
 	
 	public void addPostagHashMapLemmas(String postag, Map<String, String> lemmas) {
-		/**
-		 * @param postag
-		 * @param lemmas
-		 */
 		classLemmas.put(postag, lemmas);
 	}
 	

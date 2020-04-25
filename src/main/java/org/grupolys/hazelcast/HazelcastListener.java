@@ -5,7 +5,6 @@ import com.hazelcast.map.listener.EntryAddedListener;
 import com.hazelcast.map.listener.EntryUpdatedListener;
 
 import org.grupolys.dictionary.DefaultDictionary;
-import org.grupolys.dictionary.WordsDictionary;
 import org.grupolys.spring.service.SamulanRulesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,7 +26,7 @@ public class HazelcastListener implements
         System.out.println("Handling hazelcast event: Entry Added:" + event);
         String dictionaryId = event.getKey();
         DefaultDictionary dictionary = event.getValue();
-        rulesService.loadRulesForProfile2(dictionaryId, dictionary);
+        rulesService.loadRulesForProfile(dictionaryId, dictionary);
     }
 
     @Override
@@ -35,6 +34,6 @@ public class HazelcastListener implements
         System.out.println("handling hazelcast event: Entry updated:" + event);
         String dictionaryId = event.getKey();
         DefaultDictionary dictionary = event.getValue();
-        rulesService.loadRulesForProfile2(dictionaryId, dictionary);
+        rulesService.loadRulesForProfile(dictionaryId, dictionary);
     }
 }

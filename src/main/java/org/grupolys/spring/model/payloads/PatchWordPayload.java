@@ -12,7 +12,7 @@ public class PatchWordPayload {
     Map<PartOfSpeech, Value> partOfSpeech;
     Boolean negating;
     Double booster;
-    Boolean emoticon;
+    Double emoticon;
 
     @lombok.Data
     public static class Value {

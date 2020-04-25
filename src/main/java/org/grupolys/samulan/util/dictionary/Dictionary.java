@@ -52,9 +52,4 @@ public interface Dictionary extends Serializable {
 
     Set<String> getBoosterWords();
     float getBoosterValue(String word);
-
-    void addWordsValues(WordsValues values);
-    void addLemmasValues(LemmasValues values);
-    void addClassValues(ClassValues values);
-    void addClassLemmasValues(ClassLemmasValues values);
 }
