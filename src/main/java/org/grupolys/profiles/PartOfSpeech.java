@@ -13,6 +13,14 @@ public enum PartOfSpeech implements WordType {
     ADJ("ADJ", new String[] { "adjective", "adjectives", "adj" }),
     VERB("VERB", new String[] { "verb", "verbs" }),
     NOUN("NOUN", new String[] { "noun", "nouns" }),
+    ADP("ADP", new String[] { "adp" }),
+    PRON("PRON", new String[] { "pron" }),
+    DET("DET", new String[] { "det" }),
+    PRT("PRT", new String[] { "prt" }),
+    X("X", new String[] { "x" }),
+    NUM("NUM", new String[] { "num" }),
+    CONJ("CONJ", new String[] { "conj" }),
+    DOT(".", new String[] { "." }),
     NOPOSTAG("NOPOSTAG", new String[] {null, "nopostag"});
 
     private Map<String, String> partOfSpeech;

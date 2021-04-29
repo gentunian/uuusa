@@ -4,6 +4,7 @@ import org.grupolys.spring.model.persistence.PersistentDictionary;
 import org.grupolys.spring.model.persistence.PersistentDictionaryProfile;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 
 import java.util.List;
 
@@ -11,6 +12,9 @@ public interface ProfilesRepository extends MongoRepository<PersistentDictionary
     @Aggregation({"{ $match: { 'name': ?#{[0]}, dictionaries: { $exists: true, $not: { $size: 0 }} } }",
             "{ $project: { dictionaries: 1 }}"})
     List<PersistentDictionary> findProfileDictionaries(String name);
+
+    @Query("{ 'name': ?#{[0]} }, { dictionaries: { $elemMatch: { 'name': ?${[1] }}}}")
+    PersistentDictionary findDictionaryForProfileByName(String profileName, String dictionaryName);
 
     @Aggregation({"{ $match: { '_id': ObjectId('?0'), 'dictionaries._id': ObjectId('?1')} }",
             "{ $addFields: { dictionaries: { $filter: {" +

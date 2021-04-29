@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+  foo:
+    image: jwilder/whoami
+    networks:
+      - red
+  bar:
+    image: jwilder/whoami
+    networks:
+      - red
+
+networks:
+  red:

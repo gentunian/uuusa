@@ -1,0 +1,11 @@
+FROM openjdk:8-alpine
+WORKDIR /opt/uuusa
+COPY target/samulan-0.1.1.jar .
+ADD config config
+ADD taggers /opt/uuusa/data/taggers
+ADD parsers /opt/uuusa/data/parsers
+ADD entrypoint.sh .
+RUN mkdir /opt/uuusa/data/profiles
+EXPOSE 8080
+CMD [ "./entrypoint.sh" ]
+#CMD [ "java", "-jar", "samulan-0.1.1.jar", "-springboot"]

@@ -30,7 +30,7 @@ public @interface IsSupportedLanguage {
         @Override
         public boolean isValid(String value, ConstraintValidatorContext constraintValidatorContext) {
             // we only support spanish for now...
-            return value.toLowerCase().equals("es") || value.toLowerCase().equals("testing");
+            return value.equals("es") || value.equals("testing");
         }
     }
 }

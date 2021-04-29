@@ -12,7 +12,7 @@ import java.util.Map;
 @Service
 public class WordMapper {
 
-    public PersistentWord toPersistentWord2(PostWordPayload payload) {
+    public PersistentWord toPersistentWord(PostWordPayload payload) {
         PersistentWord word = null;
         if (payload != null) {
             word = new PersistentWord();
@@ -26,7 +26,7 @@ public class WordMapper {
         return word;
     }
 
-    public PersistentWord toPersistentWord2(PersistentWord response, PatchWordPayload payload) {
+    public PersistentWord toPersistentWord(PersistentWord response, PatchWordPayload payload) {
         PersistentWord word = null;
         if (payload != null) {
             word = new PersistentWord();

@@ -2,8 +2,7 @@ package org.grupolys.dictionary;
 
 import org.grupolys.profiles.PartOfSpeech;
 import org.grupolys.samulan.util.dictionary.*;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
+import org.apache.commons.lang.NotImplementedException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;

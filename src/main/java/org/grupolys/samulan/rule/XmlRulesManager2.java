@@ -2,7 +2,6 @@ package org.grupolys.samulan.rule;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.grupolys.dictionary.DefaultDictionary;
-import org.grupolys.dictionary.DefaultWordType;
 import org.grupolys.samulan.analyser.operation.*;
 import org.grupolys.samulan.util.SentimentDependencyGraph;
 import org.grupolys.samulan.util.SentimentDependencyNode;

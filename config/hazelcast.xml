@@ -1,0 +1,22 @@
+<hazelcast xmlns="http://www.hazelcast.com/schema/config" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.hazelcast.com/schema/config
+           http://www.hazelcast.com/schema/config/hazelcast-config-3.11.xsd">
+    <group>
+        <name>grupotest</name>
+    </group>
+    <network>
+        <join>
+            <multicast enabled="false">
+                <multicast-group>231.12.21.132</multicast-group>
+                <multicast-port>45566</multicast-port>
+            </multicast>
+            <!-- <tcp-ip enabled="false">
+                <member>${member}</member>
+            </tcp-ip> -->
+        </join>
+        <!-- <interfaces enabled="true">
+            <interface>${hostname}</interface>
+        </interfaces>
+        <port auto-increment="true">5701</port> -->
+    </network>
+</hazelcast> 

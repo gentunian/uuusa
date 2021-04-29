@@ -27,6 +27,8 @@ public interface WordsRepository extends MongoRepository<PersistentWord, String>
     @Query("{word: { $regex: ?0, $options: 'i' }, dictionary: ?1}")
     Page<PersistentWord> findAllBySearchAndDictionary(String word, String dictionary, Pageable pageable);
 
+    PersistentWord findByWordAndDictionary(String word, String dictionary);
+
     PersistentWord findByWord(String word);
 
     List<PersistentWord> findAllByDictionary(String dictionary);

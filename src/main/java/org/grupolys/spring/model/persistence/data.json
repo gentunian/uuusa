@@ -1,0 +1,19 @@
+[{
+  "word": "rojizo",
+  "profile": "id",
+  "dictionary": "id",
+  "language": "es",
+  "booster": 1.0,
+  "negating": false,
+  "emoticon": false,
+  "partOfSpeech": {
+    "NOUN": {
+      "value": 1.0,
+      "lemma": "rojo"
+    },
+    "NOPOSTAG": {
+      "value": 0.0,
+      "lemma": null
+    }
+  }
+}]
